@@ -12,12 +12,12 @@ export default async function Home() {
 
   const { data, error } = hasConfig
       ? await supabase!
-          .from<SupabaseRow>(tableName!)
+          .from(tableName!)
           .select("id,name,title")
           .limit(20)
       : { data: null, error: null };
 
-  const items = data ?? [];
+  const items = (data ?? []) as SupabaseRow[];
 
   return (
       <div className="min-h-screen bg-zinc-50 px-6 py-16 text-zinc-900 dark:bg-black dark:text-zinc-50">
