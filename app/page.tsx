@@ -28,7 +28,7 @@ export default async function Home() {
   const hasConfig = missingVars.length === 0 && Boolean(supabase);
 
   const { data, error } = hasConfig
-      ? await supabase!.from(tableName!).select("id,name,title").limit(20)
+      ? await supabase!.from(tableName!).select("*").limit(20)
       : { data: null, error: null };
 
   const items = (data ?? []) as SupabaseRow[];
