@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabase";
 
 type SupabaseRow = {
-  id: string | number;
-  name?: string | null;
-  title?: string | null;
+  id: string;
+  content?: string | null;
+  created_datetime_utc?: string | null;
 };
 
 export default async function Home() {
@@ -28,7 +28,10 @@ export default async function Home() {
   const hasConfig = missingVars.length === 0 && Boolean(supabase);
 
   const { data, error } = hasConfig
-      ? await supabase!.from(tableName!).select("*").limit(20)
+      ? await supabase!
+          .from(tableName!)
+          .select("id,content,created_datetime_utc")
+          .limit(20)
       : { data: null, error: null };
 
   const items = (data ?? []) as SupabaseRow[];
@@ -91,11 +94,16 @@ export default async function Home() {
                               className="rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 shadow-sm dark:border-zinc-800 dark:bg-black dark:text-zinc-200"
                           >
                             <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                              {item.title ?? item.name ?? `Row ${item.id}`}
+                              {item.content ?? `Row ${item.id}`}
                             </p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
                               ID: {item.id}
                             </p>
+                            {item.created_datetime_utc ? (
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                  Created: {new Date(item.created_datetime_utc).toLocaleString()}
+                                </p>
+                            ) : null}
                           </li>
                       ))
                   )}
