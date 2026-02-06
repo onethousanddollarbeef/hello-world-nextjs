@@ -7,14 +7,28 @@ type SupabaseRow = {
 };
 
 export default async function Home() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
   const tableName = process.env.SUPABASE_TABLE;
-  const hasConfig = Boolean(supabase && tableName);
+
+  const missingVars: string[] = [];
+
+  if (!supabaseUrl) {
+    missingVars.push("SUPABASE_URL");
+  }
+
+  if (!supabaseAnonKey) {
+    missingVars.push("SUPABASE_ANON_KEY");
+  }
+
+  if (!tableName) {
+    missingVars.push("SUPABASE_TABLE");
+  }
+
+  const hasConfig = missingVars.length === 0 && Boolean(supabase);
 
   const { data, error } = hasConfig
-      ? await supabase!
-          .from(tableName!)
-          .select("id,name,title")
-          .limit(20)
+      ? await supabase!.from(tableName!).select("id,name,title").limit(20)
       : { data: null, error: null };
 
   const items = (data ?? []) as SupabaseRow[];
@@ -41,6 +55,19 @@ export default async function Home() {
                   Add <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>, and{" "}
                   <code>SUPABASE_TABLE</code> environment variables to fetch data.
                 </p>
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-200">
+                  {missingVars.length > 0 ? (
+                      missingVars.map((varName) => (
+                          <li key={varName}>
+                            Missing <code>{varName}</code>
+                          </li>
+                      ))
+                  ) : (
+                      <li>
+                        Environment variables exist, but Supabase client could not be created.
+                      </li>
+                  )}
+                </ul>
               </section>
           ) : error ? (
               <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
