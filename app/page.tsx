@@ -1,116 +1,41 @@
-import { supabase } from "@/lib/supabase";
-
-type SupabaseRow = {
-  id: string;
-  content?: string | null;
-  created_datetime_utc?: string | null;
-};
+import Link from "next/link";
+import LoginButton from "@/app/auth/login-button";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function Home() {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-  const tableName = process.env.SUPABASE_TABLE;
-
-  const missingVars: string[] = [];
-
-  if (!supabaseUrl) {
-    missingVars.push("SUPABASE_URL");
-  }
-
-  if (!supabaseAnonKey) {
-    missingVars.push("SUPABASE_ANON_KEY");
-  }
-
-  if (!tableName) {
-    missingVars.push("SUPABASE_TABLE");
-  }
-
-  const hasConfig = missingVars.length === 0 && Boolean(supabase);
-
-  const { data, error } = hasConfig
-      ? await supabase!
-          .from(tableName!)
-          .select("id,content,created_datetime_utc")
-          .limit(20)
-      : { data: null, error: null };
-
-  const items = (data ?? []) as SupabaseRow[];
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
-      <div className="min-h-screen bg-zinc-50 px-6 py-16 text-zinc-900 dark:bg-black dark:text-zinc-50">
-        <main className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-          <header className="space-y-3">
-            <p className="text-sm uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">
-              Supabase List
-            </p>
-            <h1 className="text-4xl font-semibold">Hello World</h1>
-            <p className="text-base text-zinc-600 dark:text-zinc-300">
-              This page loads rows from Supabase and renders them in a list.
-            </p>
-          </header>
+      <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+        <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 2 Auth Assignment</p>
+        <h1 className="text-4xl font-semibold">Hello World</h1>
+        <p className="text-zinc-300">
+          This app protects <code>/protected</code> and uses Google OAuth with Supabase.
+        </p>
 
-          {!hasConfig ? (
-              <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                <p className="font-semibold text-zinc-800 dark:text-zinc-100">
-                  Supabase configuration missing
-                </p>
-                <p className="mt-2">
-                  Add <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>, and{" "}
-                  <code>SUPABASE_TABLE</code> environment variables to fetch data.
-                </p>
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-200">
-                  {missingVars.length > 0 ? (
-                      missingVars.map((varName) => (
-                          <li key={varName}>
-                            Missing <code>{varName}</code>
-                          </li>
-                      ))
-                  ) : (
-                      <li>
-                        Environment variables exist, but Supabase client could not be created.
-                      </li>
-                  )}
-                </ul>
-              </section>
-          ) : error ? (
-              <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
-                <p className="font-semibold">Unable to load Supabase data</p>
-                <p className="mt-2">{error.message}</p>
-              </section>
+        <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-5">
+          {user ? (
+              <>
+                <p className="font-medium">Signed in as {user.email}</p>
+                <div className="mt-4">
+                  <Link className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black" href="/protected">
+                    Go to protected page
+                  </Link>
+                </div>
+              </>
           ) : (
-              <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                <h2 className="text-lg font-semibold">
-                  {tableName} items ({items.length})
-                </h2>
-                <ul className="mt-4 space-y-3">
-                  {items.length === 0 ? (
-                      <li className="text-sm text-zinc-500 dark:text-zinc-400">
-                        No rows found in this table.
-                      </li>
-                  ) : (
-                      items.map((item) => (
-                          <li
-                              key={String(item.id)}
-                              className="rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 shadow-sm dark:border-zinc-800 dark:bg-black dark:text-zinc-200"
-                          >
-                            <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                              {item.content ?? `Row ${item.id}`}
-                            </p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              ID: {item.id}
-                            </p>
-                            {item.created_datetime_utc ? (
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                  Created: {new Date(item.created_datetime_utc).toLocaleString()}
-                                </p>
-                            ) : null}
-                          </li>
-                      ))
-                  )}
-                </ul>
-              </section>
+              <>
+                <p className="font-medium">You are not signed in.</p>
+                <p className="mt-2 text-sm text-zinc-400">Sign in to access the gated UI.</p>
+                <div className="mt-4">
+                  <LoginButton />
+                </div>
+              </>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
   );
 }
