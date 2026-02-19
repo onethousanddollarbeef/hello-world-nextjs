@@ -57,9 +57,23 @@ function getInsertCandidates(captionId: string, vote: "up" | "down", userId: str
         { caption_id: captionId, vote: numericVote, user_id: userId },
         { caption_id: captionId, vote, user_id: userId },
         { caption_id: captionId, vote: booleanVote, user_id: userId },
+        { caption_id: captionId, rating: numericVote, user_id: userId },
+        { caption_id: captionId, value: numericVote, user_id: userId },
+        { caption_id: captionId, direction: vote, user_id: userId },
+        { caption_id: captionId, is_upvote: booleanVote, user_id: userId },
+        { caption_id: captionId, upvote: booleanVote, user_id: userId },
+        { caption_id: captionId, downvote: !booleanVote, user_id: userId },
+        { caption_id: captionId, user_id: userId },
         { caption_id: captionId, vote: numericVote },
         { caption_id: captionId, vote },
         { caption_id: captionId, vote: booleanVote },
+        { caption_id: captionId, rating: numericVote },
+        { caption_id: captionId, value: numericVote },
+        { caption_id: captionId, direction: vote },
+        { caption_id: captionId, is_upvote: booleanVote },
+        { caption_id: captionId, upvote: booleanVote },
+        { caption_id: captionId, downvote: !booleanVote },
+        { caption_id: captionId },
     ];
 }
 
