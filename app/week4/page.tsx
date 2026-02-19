@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 
 type RowValue = string | number | boolean | null;
@@ -52,8 +53,29 @@ function voteMessage(voteState?: string, reason?: string) {
 function getInsertCandidates(captionId: string, vote: "up" | "down", userId: string) {
     const numericVote = vote === "up" ? 1 : -1;
     const booleanVote = vote === "up";
+    const nowUtc = new Date().toISOString();
 
     return [
+        { caption_id: captionId, vote: numericVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, rating: numericVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, value: numericVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, direction: vote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, is_upvote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, upvote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, downvote: !booleanVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: numericVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: booleanVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, rating: numericVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, value: numericVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, direction: vote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, is_upvote: booleanVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, upvote: booleanVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, downvote: !booleanVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: numericVote, user_id: userId },
         { caption_id: captionId, vote, user_id: userId },
         { caption_id: captionId, vote: booleanVote, user_id: userId },
@@ -142,18 +164,23 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                 </Link>
             </div>
 
+            {user ? (
+                <section className="rounded-2xl border border-emerald-700/50 bg-emerald-900/20 p-4 text-sm text-emerald-200">
+                    Logged in as <strong>{user.email ?? user.id}</strong>. Votes will be submitted from this account.
+                </section>
+            ) : (
+                <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+                    <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
+                    <p className="mt-2">You can view captions, but only logged-in users can submit upvotes or downvotes.</p>
+                    <div className="mt-4">
+                        <LoginButton />
+                    </div>
+                </section>
+            )}
+
             {flashMessage ? (
                 <section className="rounded-2xl border border-zinc-300 bg-zinc-100 p-4 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
                     {flashMessage}
-                </section>
-            ) : null}
-
-            {!user ? (
-                <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                    <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
-                    <p className="mt-2">
-                        You can still view captions, but only logged-in users can submit upvotes or downvotes.
-                    </p>
                 </section>
             ) : null}
 
