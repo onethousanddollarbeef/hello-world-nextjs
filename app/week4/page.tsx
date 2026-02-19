@@ -8,6 +8,7 @@ type SupabaseRow = Record<string, RowValue> & { id?: string | number | null };
 type Week4PageProps = {
     searchParams?: Promise<{
         vote?: string;
+        reason?: string;
     }>;
 };
 
@@ -28,7 +29,7 @@ function pickLabel(row: SupabaseRow) {
     return firstStringValue ?? `Row ${row.id ?? "unknown"}`;
 }
 
-function voteMessage(voteState?: string) {
+function voteMessage(voteState?: string, reason?: string) {
     if (voteState === "saved") {
         return "Your vote was saved.";
     }
@@ -38,10 +39,28 @@ function voteMessage(voteState?: string) {
     }
 
     if (voteState === "failed") {
+        if (reason) {
+            return `Vote could not be saved: ${decodeURIComponent(reason)}`;
+        }
+
         return "Vote could not be saved. Please try again.";
     }
 
     return null;
+}
+
+function getInsertCandidates(captionId: string, vote: "up" | "down", userId: string) {
+    const numericVote = vote === "up" ? 1 : -1;
+    const booleanVote = vote === "up";
+
+    return [
+        { caption_id: captionId, vote: numericVote, user_id: userId },
+        { caption_id: captionId, vote, user_id: userId },
+        { caption_id: captionId, vote: booleanVote, user_id: userId },
+        { caption_id: captionId, vote: numericVote },
+        { caption_id: captionId, vote },
+        { caption_id: captionId, vote: booleanVote },
+    ];
 }
 
 export default async function Week4Page({ searchParams }: Week4PageProps) {
@@ -72,19 +91,22 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
             redirect("/week4?vote=login_required");
         }
 
-        const voteValue = vote === "up" ? 1 : -1;
+        const candidates = getInsertCandidates(String(captionId), vote, user.id);
 
-        const { error } = await supabase.from("caption_votes").insert({
-            caption_id: String(captionId),
-            vote: voteValue,
-            user_id: user.id,
-        });
+        let lastError: string | null = null;
 
-        if (error) {
-            redirect("/week4?vote=failed");
+        for (const candidate of candidates) {
+            const { error } = await supabase.from("caption_votes").insert(candidate);
+
+            if (!error) {
+                redirect("/week4?vote=saved");
+            }
+
+            lastError = error.message;
         }
 
-        redirect("/week4?vote=saved");
+        const safeReason = encodeURIComponent(lastError ?? "Unknown database error");
+        redirect(`/week4?vote=failed&reason=${safeReason}`);
     };
 
     const { data, error } = tableName
@@ -92,7 +114,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         : { data: null, error: null };
 
     const items = (data ?? []) as SupabaseRow[];
-    const flashMessage = voteMessage(params?.vote);
+    const flashMessage = voteMessage(params?.vote, params?.reason);
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
