@@ -219,8 +219,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                                         <form action={handleVote} className="mt-3 flex flex-wrap gap-2">
                                             <input name="caption_id" type="hidden" value={String(item.id)} />
                                             <button
-                                                className="rounded-lg border border-emerald-600/40 bg-emerald-600/20 px-3 py-1 text-xs font-medium text-emerald-200 disabled:opacity-40"
-                                                disabled={!user}
+                                                className="rounded-lg border border-emerald-600/40 bg-emerald-600/20 px-3 py-1 text-xs font-medium text-emerald-200"
                                                 name="vote"
                                                 type="submit"
                                                 value="up"
@@ -228,8 +227,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                                                 Upvote
                                             </button>
                                             <button
-                                                className="rounded-lg border border-rose-600/40 bg-rose-600/20 px-3 py-1 text-xs font-medium text-rose-200 disabled:opacity-40"
-                                                disabled={!user}
+                                                className="rounded-lg border border-rose-600/40 bg-rose-600/20 px-3 py-1 text-xs font-medium text-rose-200"
                                                 name="vote"
                                                 type="submit"
                                                 value="down"
