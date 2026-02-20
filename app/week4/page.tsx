@@ -50,14 +50,26 @@ function voteMessage(voteState?: string, reason?: string) {
     return null;
 }
 
+function isMissingColumnError(message: string) {
+    return message.includes("Could not find") && message.includes("column") && message.includes("caption_votes");
+}
+
+function extractMissingColumnName(message: string) {
+    const match = message.match(/Could not find the '([^']+)' column/);
+    return match?.[1] ?? null;
+}
+
 function getInsertCandidates(captionId: string, vote: "up" | "down", userId: string) {
     const numericVote = vote === "up" ? 1 : -1;
+    const binaryVote = vote === "up" ? 1 : 0;
     const booleanVote = vote === "up";
     const nowUtc = new Date().toISOString();
 
     return [
         { caption_id: captionId, vote: numericVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: binaryVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: vote === "up" ? "upvote" : "downvote", user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, rating: numericVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, value: numericVote, user_id: userId, created_datetime_utc: nowUtc },
@@ -67,7 +79,9 @@ function getInsertCandidates(captionId: string, vote: "up" | "down", userId: str
         { caption_id: captionId, downvote: !booleanVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: numericVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: binaryVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: vote === "up" ? "upvote" : "downvote", created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: booleanVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, rating: numericVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, value: numericVote, created_datetime_utc: nowUtc },
@@ -76,8 +90,6 @@ function getInsertCandidates(captionId: string, vote: "up" | "down", userId: str
         { caption_id: captionId, upvote: booleanVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, downvote: !booleanVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: numericVote, user_id: userId, created_at: nowUtc },
-        { caption_id: captionId, vote: numericVote, created_at: nowUtc },
     ];
 }
 
@@ -111,19 +123,45 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
         const candidates = getInsertCandidates(String(captionId), vote, user.id);
 
-        let lastError: string | null = null;
+        let fallbackError: string | null = null;
+        let primaryError: string | null = null;
+        const blockedColumns = new Set<string>();
 
         for (const candidate of candidates) {
+            const candidateColumns = Object.keys(candidate);
+            const hasBlockedColumn = candidateColumns.some((columnName) => blockedColumns.has(columnName));
+
+            if (hasBlockedColumn) {
+                continue;
+            }
+
             const { error } = await supabase.from("caption_votes").insert(candidate);
 
             if (!error) {
                 redirect("/week4?vote=saved");
             }
 
-            lastError = error.message;
+            if (!fallbackError) {
+                fallbackError = error.message;
+            }
+
+            if (isMissingColumnError(error.message)) {
+                const missingColumn = extractMissingColumnName(error.message);
+
+                if (missingColumn) {
+                    blockedColumns.add(missingColumn);
+                }
+
+                continue;
+            }
+
+            if (!primaryError) {
+                primaryError = error.message;
+            }
         }
 
-        const safeReason = encodeURIComponent(lastError ?? "Unknown database error");
+        const finalReason = primaryError ?? fallbackError ?? "Unknown database error";
+        const safeReason = encodeURIComponent(finalReason);
         redirect(`/week4?vote=failed&reason=${safeReason}`);
     };
 
