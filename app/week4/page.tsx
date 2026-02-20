@@ -17,6 +17,7 @@ type Week4PageProps = {
         vote?: string;
         reason?: string;
         i?: string;
+        showVotes?: string;
     }>;
 };
 
@@ -97,6 +98,10 @@ function parseIndex(rawIndex: string | undefined, itemCount: number) {
     return Math.min(Math.max(Math.trunc(parsed), 0), itemCount - 1);
 }
 
+function isVoteVisible(flag: string | undefined) {
+    return flag !== "0";
+}
+
 export default async function Week4Page({ searchParams }: Week4PageProps) {
     const params = searchParams ? await searchParams : undefined;
     const tableName = process.env.SUPABASE_TABLE;
@@ -107,6 +112,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
     } = await supabase.auth.getUser();
 
     const profileId = user ? await resolveProfileId(supabase, user.id) : null;
+    const showVotes = isVoteVisible(params?.showVotes);
 
     const handleVote = async (formData: FormData) => {
         "use server";
@@ -114,6 +120,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         const captionId = formData.get("caption_id");
         const vote = formData.get("vote");
         const currentIndex = Number(formData.get("index") ?? 0);
+        const showVotesFlag = String(formData.get("showVotes") ?? "1");
 
         if (!captionId || !vote || (vote !== "up" && vote !== "down")) {
             redirect("/week4?vote=failed");
@@ -151,11 +158,11 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
         if (error) {
             const safeReason = encodeURIComponent(error.message);
-            redirect(`/week4?vote=failed&reason=${safeReason}&i=${currentIndex}`);
+            redirect(`/week4?vote=failed&reason=${safeReason}&i=${currentIndex}&showVotes=${showVotesFlag}`);
         }
 
         const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
-        redirect(`/week4?vote=saved&i=${nextIndex}`);
+        redirect(`/week4?vote=saved&i=${nextIndex}&showVotes=${showVotesFlag}`);
     };
 
     const { data, error } = tableName
@@ -164,7 +171,8 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
     const items = (data ?? []) as SupabaseRow[];
     const activeIndex = parseIndex(params?.i, items.length);
-    const activeCaption = items[activeIndex] ?? null;
+    const activeCaption =
+        items[activeIndex] ?? null;
     const activeCaptionId =
         activeCaption && activeCaption.id !== undefined && activeCaption.id !== null
             ? String(activeCaption.id)
@@ -181,6 +189,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
     const previousIndex = Math.max(activeIndex - 1, 0);
     const nextIndex = items.length > 0 ? Math.min(activeIndex + 1, items.length - 1) : 0;
+    const toggleVoteViewHref = `/week4?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
@@ -188,13 +197,16 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
                     <h1 className="text-4xl font-semibold">Caption Match</h1>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        Dating app style: one caption at a time.
-                    </p>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Dating app style: one caption at a time.</p>
                 </div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
-                    Back to Home
-                </Link>
+                <div className="flex gap-2">
+                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                        {showVotes ? "Hide scores" : "Show scores"}
+                    </Link>
+                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                        Back to Home
+                    </Link>
+                </div>
             </div>
 
             {user ? (
@@ -239,17 +251,20 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                         Caption {activeIndex + 1} of {items.length}
                     </p>
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{pickLabel(activeCaption)}</p>
-                    {activeCaptionId ? (
-                        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">ID: {activeCaptionId}</p>
-                    ) : null}
-                    <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current score: {formatScore(score)}</p>
+                    {activeCaptionId ? <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">ID: {activeCaptionId}</p> : null}
+                    {showVotes ? (
+                        <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current score: {formatScore(score)}</p>
+                    ) : (
+                        <p className="mt-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400">Score hidden</p>
+                    )}
 
                     {activeCaptionId ? (
                         <form action={handleVote} className="mt-5 flex flex-wrap items-center gap-2">
                             <input name="caption_id" type="hidden" value={activeCaptionId} />
                             <input name="index" type="hidden" value={String(activeIndex)} />
+                            <input name="showVotes" type="hidden" value={showVotes ? "1" : "0"} />
                             <button
-                                className={`rounded-lg border px-4 py-2 text-sm font-medium ${
+                                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === 1
                                         ? "border-emerald-500 bg-emerald-500/40 text-emerald-100"
                                         : "border-emerald-600/40 bg-emerald-600/20 text-emerald-200"
@@ -261,7 +276,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                                 Upvote
                             </button>
                             <button
-                                className={`rounded-lg border px-4 py-2 text-sm font-medium ${
+                                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === -1
                                         ? "border-rose-500 bg-rose-500/40 text-rose-100"
                                         : "border-rose-600/40 bg-rose-600/20 text-rose-200"
@@ -272,7 +287,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                             >
                                 Downvote
                             </button>
-                            {userVote ? (
+                            {showVotes && userVote ? (
                                 <span className="text-xs text-zinc-500 dark:text-zinc-400">
                   Your current vote: {userVote === 1 ? "Upvote" : "Downvote"}
                 </span>
@@ -283,10 +298,10 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     )}
 
                     <div className="mt-6 flex items-center justify-between gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href={`/week4?i=${previousIndex}`}>
+                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Previous
                         </Link>
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href={`/week4?i=${nextIndex}`}>
+                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Next
                         </Link>
                     </div>
