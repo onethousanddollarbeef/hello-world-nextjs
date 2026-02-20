@@ -2,7 +2,14 @@ import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
 
 const heroImageUrl = "https://images5.alphacoders.com/131/1317816.jpeg";
-const friendsIconUrl = "https://bg3.wiki/wiki/File:Friends.webp";
+const tashaCardImageUrl = "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54";
+
+const spellArt = {
+    friends: "https://bg3.wiki/w/images/2/22/Friends.webp?20231106090137",
+    guidance: "https://bg3.wiki/w/images/8/8b/Guidance.webp",
+    thaumaturgy: "https://bg3.wiki/w/images/c/cf/Thaumaturgy.webp",
+    produceFlame: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
+};
 
 type WeekCard = {
     week: string;
@@ -11,7 +18,7 @@ type WeekCard = {
     description: string;
     href: string;
     cta: string;
-    overlayImageUrl?: string;
+    overlayImageUrl: string;
 };
 
 const weekCards: WeekCard[] = [
@@ -22,7 +29,7 @@ const weekCards: WeekCard[] = [
         description: "First deployment basics: set up your app and start charming users.",
         href: "/",
         cta: "You are here",
-        overlayImageUrl: friendsIconUrl,
+        overlayImageUrl: spellArt.friends,
     },
     {
         week: "Week 2",
@@ -31,6 +38,7 @@ const weekCards: WeekCard[] = [
         description: "Use data guidance to query, inspect, and render table rows clearly.",
         href: "/week2",
         cta: "Open Week 2 card",
+        overlayImageUrl: spellArt.guidance,
     },
     {
         week: "Week 3",
@@ -39,6 +47,7 @@ const weekCards: WeekCard[] = [
         description: "Secure route magic: auth flow, gated content, and dramatic protections.",
         href: "/protected",
         cta: "Open Week 3 card",
+        overlayImageUrl: spellArt.thaumaturgy,
     },
     {
         week: "Week 4",
@@ -47,6 +56,7 @@ const weekCards: WeekCard[] = [
         description: "Spark fast one-at-a-time voting with upvote/downvote updates.",
         href: "/week4",
         cta: "Open Week 4 card",
+        overlayImageUrl: spellArt.produceFlame,
     },
 ];
 
@@ -74,19 +84,17 @@ export default function Home() {
                             key={card.week}
                             className="relative overflow-hidden rounded-2xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm transition-transform duration-150 hover:-translate-y-1"
                         >
-                            {card.overlayImageUrl ? (
-                                <div
-                                    aria-hidden="true"
-                                    className="pointer-events-none absolute -right-5 -top-8 h-36 w-36 opacity-30 blur-[0.3px]"
-                                    style={{
-                                        backgroundImage: `url('${card.overlayImageUrl}')`,
-                                        backgroundRepeat: "no-repeat",
-                                        backgroundPosition: "center",
-                                        backgroundSize: "contain",
-                                        filter: "drop-shadow(0 0 8px rgba(255,120,180,0.55))",
-                                    }}
-                                />
-                            ) : null}
+                            <div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -right-5 -top-8 h-36 w-36 opacity-35 blur-[0.2px]"
+                                style={{
+                                    backgroundImage: `url('${card.overlayImageUrl}')`,
+                                    backgroundRepeat: "no-repeat",
+                                    backgroundPosition: "center",
+                                    backgroundSize: "contain",
+                                    filter: "drop-shadow(0 0 10px rgba(255,200,140,0.4))",
+                                }}
+                            />
 
                             <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">{card.week}</p>
                             <h2 className="mt-2 text-xl font-semibold">{card.title}</h2>
@@ -109,7 +117,7 @@ export default function Home() {
                     <div
                         className="relative h-full min-h-[360px] w-full rounded-xl bg-cover bg-center"
                         style={{
-                            backgroundImage: `linear-gradient(rgba(5, 5, 12, 0.2), rgba(5, 5, 12, 0.7)), url('${heroImageUrl}')`,
+                            backgroundImage: `linear-gradient(rgba(5, 5, 12, 0.2), rgba(5, 5, 12, 0.7)), url('${tashaCardImageUrl}')`,
                         }}
                     >
                         <div className="absolute inset-x-0 bottom-0 rounded-b-xl bg-black/45 p-4">
