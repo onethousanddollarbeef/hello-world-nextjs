@@ -74,7 +74,7 @@ export default function Home() {
             <header className="space-y-3 rounded-xl border border-zinc-200/20 bg-black/40 p-6 backdrop-blur-sm">
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-300">Assignment Hub</p>
                 <h1 className="text-4xl font-semibold">Julia&apos;s Hideous Laughter</h1>
-                <p className="text-zinc-200">All assignments are accessible from this page so you can test everything from one place.</p>
+                <p className="text-zinc-200">Leave a creature Prone Prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
             </header>
 
             <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -123,7 +123,7 @@ export default function Home() {
                         <div className="absolute inset-x-0 bottom-0 rounded-b-xl bg-black/45 p-4">
                             <p className="text-xs uppercase tracking-[0.25em] text-zinc-300">Signature Spell Card</p>
                             <p className="mt-2 text-lg font-semibold">Tasha&apos;s Hideous Laughter</p>
-                            <p className="mt-1 text-sm text-zinc-200">Baldur&apos;s Gate-inspired side panel for the assignment hub theme.</p>
+                            <p className="mt-1 text-sm text-zinc-200">Risum Peniatis! (&quot;Laugh out loud&quot;)</p>
                         </div>
                     </div>
                 </aside>

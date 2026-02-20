@@ -171,8 +171,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
     const items = (data ?? []) as SupabaseRow[];
     const activeIndex = parseIndex(params?.i, items.length);
-    const activeCaption =
-        items[activeIndex] ?? null;
+    const activeCaption = items[activeIndex] ?? null;
     const activeCaptionId =
         activeCaption && activeCaption.id !== undefined && activeCaption.id !== null
             ? String(activeCaption.id)
@@ -197,7 +196,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
                     <h1 className="text-4xl font-semibold">Caption Match</h1>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Dating app style: one caption at a time.</p>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">A flame in your hand sheds a light in a 9 m (30 ft) radius and deals 1d8⁠ ⁠Fire damage when thrown.</p>
                 </div>
                 <div className="flex gap-2">
                     <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={toggleVoteViewHref}>
