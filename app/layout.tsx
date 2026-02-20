@@ -8,7 +8,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Tasha's Hideous Laughter",
+    title: "Julia's Hideous Laughter",
     description: "Assignment hub with Week 1, Week 2, and Week 3 pages.",
 };
 

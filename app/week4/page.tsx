@@ -6,10 +6,17 @@ import { createClient } from "@/utils/supabase/server";
 type RowValue = string | number | boolean | null;
 type SupabaseRow = Record<string, RowValue> & { id?: string | number | null };
 
+type VoteRow = {
+    caption_id: string;
+    vote_value: number;
+    profile_id: string;
+};
+
 type Week4PageProps = {
     searchParams?: Promise<{
         vote?: string;
         reason?: string;
+        i?: string;
     }>;
 };
 
@@ -32,7 +39,7 @@ function pickLabel(row: SupabaseRow) {
 
 function voteMessage(voteState?: string, reason?: string) {
     if (voteState === "saved") {
-        return "Your vote was saved.";
+        return "Your vote was saved and your next caption is ready.";
     }
 
     if (voteState === "login_required") {
@@ -50,81 +57,44 @@ function voteMessage(voteState?: string, reason?: string) {
     return null;
 }
 
-function isMissingColumnError(message: string) {
-    return message.includes("Could not find") && message.includes("column") && message.includes("caption_votes");
-}
-
-function extractMissingColumnName(message: string) {
-    const match = message.match(/Could not find the '([^']+)' column/);
-    return match?.[1] ?? null;
-}
-
-function getInsertCandidates(captionId: string, vote: "up" | "down", profileId: string, userId: string) {
-    const numericVote = vote === "up" ? 1 : -1;
-    const binaryVote = vote === "up" ? 1 : 0;
-    const booleanVote = vote === "up";
-    const voteText = vote === "up" ? "upvote" : "downvote";
-    const nowUtc = new Date().toISOString();
-
-    return [
-        { caption_id: captionId, vote_value: numericVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: numericVote, profile_id: profileId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: binaryVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: binaryVote, profile_id: profileId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: voteText, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: voteText, profile_id: profileId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: booleanVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: booleanVote, profile_id: profileId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: numericVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: binaryVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: voteText, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote_value: booleanVote, created_datetime_utc: nowUtc },
-
-        { caption_id: captionId, vote: numericVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: binaryVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: voteText, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: booleanVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, rating: numericVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, value: numericVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, direction: vote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, is_upvote: booleanVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, upvote: booleanVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, downvote: !booleanVote, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-
-        { caption_id: captionId, vote: numericVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: binaryVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: voteText, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: booleanVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, rating: numericVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, value: numericVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, direction: vote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, is_upvote: booleanVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, upvote: booleanVote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, downvote: !booleanVote, created_datetime_utc: nowUtc },
-
-        { caption_id: captionId, profile_id: profileId, user_id: userId, created_datetime_utc: nowUtc },
-
-        { caption_id: captionId, profile_id: profileId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, created_datetime_utc: nowUtc },
-    ];
-}
-
 async function resolveProfileId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
-    const fromUserId = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+    const byUserId = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
 
-    if (!fromUserId.error && fromUserId.data?.id) {
-        return String(fromUserId.data.id);
+    if (!byUserId.error && byUserId.data?.id) {
+        return String(byUserId.data.id);
     }
 
-    const fromId = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
+    const byId = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
 
-    if (!fromId.error && fromId.data?.id) {
-        return String(fromId.data.id);
+    if (!byId.error && byId.data?.id) {
+        return String(byId.data.id);
     }
 
-    return userId;
+    return null;
+}
+
+function formatScore(score: number) {
+    if (score > 0) {
+        return `+${score}`;
+    }
+
+    return String(score);
+}
+
+function parseIndex(rawIndex: string | undefined, itemCount: number) {
+    const fallback = 0;
+
+    if (itemCount === 0) {
+        return 0;
+    }
+
+    const parsed = Number(rawIndex ?? fallback);
+
+    if (!Number.isFinite(parsed)) {
+        return 0;
+    }
+
+    return Math.min(Math.max(Math.trunc(parsed), 0), itemCount - 1);
 }
 
 export default async function Week4Page({ searchParams }: Week4PageProps) {
@@ -136,11 +106,14 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         data: { user },
     } = await supabase.auth.getUser();
 
+    const profileId = user ? await resolveProfileId(supabase, user.id) : null;
+
     const handleVote = async (formData: FormData) => {
         "use server";
 
         const captionId = formData.get("caption_id");
         const vote = formData.get("vote");
+        const currentIndex = Number(formData.get("index") ?? 0);
 
         if (!captionId || !vote || (vote !== "up" && vote !== "down")) {
             redirect("/week4?vote=failed");
@@ -156,63 +129,68 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         }
 
         const profileId = await resolveProfileId(supabase, user.id);
-        const candidates = getInsertCandidates(String(captionId), vote, profileId, user.id);
 
-        let fallbackError: string | null = null;
-        let primaryError: string | null = null;
-        const blockedColumns = new Set<string>();
-
-        for (const candidate of candidates) {
-            const candidateColumns = Object.keys(candidate);
-            const hasBlockedColumn = candidateColumns.some((columnName) => blockedColumns.has(columnName));
-
-            if (hasBlockedColumn) {
-                continue;
-            }
-
-            const { error } = await supabase.from("caption_votes").insert(candidate);
-
-            if (!error) {
-                redirect("/week4?vote=saved");
-            }
-
-            if (!fallbackError) {
-                fallbackError = error.message;
-            }
-
-            if (isMissingColumnError(error.message)) {
-                const missingColumn = extractMissingColumnName(error.message);
-
-                if (missingColumn) {
-                    blockedColumns.add(missingColumn);
-                }
-
-                continue;
-            }
-
-            if (!primaryError) {
-                primaryError = error.message;
-            }
+        if (!profileId) {
+            const safeReason = encodeURIComponent("No profile found for this authenticated user.");
+            redirect(`/week4?vote=failed&reason=${safeReason}`);
         }
 
-        const finalReason = primaryError ?? fallbackError ?? "Unknown database error";
-        const safeReason = encodeURIComponent(finalReason);
-        redirect(`/week4?vote=failed&reason=${safeReason}`);
+        const voteValue = vote === "up" ? 1 : -1;
+        const nowUtc = new Date().toISOString();
+
+        const { error } = await supabase.from("caption_votes").upsert(
+            {
+                caption_id: String(captionId),
+                profile_id: profileId,
+                vote_value: voteValue,
+                created_datetime_utc: nowUtc,
+                modified_datetime_utc: nowUtc,
+            },
+            { onConflict: "profile_id,caption_id" }
+        );
+
+        if (error) {
+            const safeReason = encodeURIComponent(error.message);
+            redirect(`/week4?vote=failed&reason=${safeReason}&i=${currentIndex}`);
+        }
+
+        const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
+        redirect(`/week4?vote=saved&i=${nextIndex}`);
     };
 
     const { data, error } = tableName
-        ? await supabase.from(tableName).select("*").limit(20)
+        ? await supabase.from(tableName).select("*").limit(200)
         : { data: null, error: null };
 
     const items = (data ?? []) as SupabaseRow[];
+    const activeIndex = parseIndex(params?.i, items.length);
+    const activeCaption = items[activeIndex] ?? null;
+    const activeCaptionId =
+        activeCaption && activeCaption.id !== undefined && activeCaption.id !== null
+            ? String(activeCaption.id)
+            : null;
+
+    const { data: votesData } = activeCaptionId
+        ? await supabase.from("caption_votes").select("caption_id,vote_value,profile_id").eq("caption_id", activeCaptionId)
+        : { data: null };
+
+    const votes = (votesData ?? []) as VoteRow[];
+    const score = votes.reduce((sum, row) => sum + row.vote_value, 0);
+    const userVote = profileId ? votes.find((row) => row.profile_id === profileId)?.vote_value : undefined;
     const flashMessage = voteMessage(params?.vote, params?.reason);
+
+    const previousIndex = Math.max(activeIndex - 1, 0);
+    const nextIndex = items.length > 0 ? Math.min(activeIndex + 1, items.length - 1) : 0;
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
-                    <h1 className="text-4xl font-semibold">Rate Captions</h1>
+                    <h1 className="text-4xl font-semibold">Caption Match</h1>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                        Dating app style: one caption at a time.
+                    </p>
                 </div>
                 <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
                     Back to Home
@@ -221,12 +199,12 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
             {user ? (
                 <section className="rounded-2xl border border-emerald-700/50 bg-emerald-900/20 p-4 text-sm text-emerald-200">
-                    Logged in as <strong>{user.email ?? user.id}</strong>. Votes will be submitted from this account.
+                    Logged in as <strong>{user.email ?? user.id}</strong>. Your vote updates your existing choice for this caption.
                 </section>
             ) : (
                 <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
                     <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
-                    <p className="mt-2">You can view captions, but only logged-in users can submit upvotes or downvotes.</p>
+                    <p className="mt-2">You can browse captions, but only logged-in users can submit votes.</p>
                     <div className="mt-4">
                         <LoginButton />
                     </div>
@@ -251,52 +229,67 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <p className="font-semibold">Unable to load Supabase data</p>
                     <p className="mt-2">{error.message}</p>
                 </section>
+            ) : !activeCaption ? (
+                <section className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+                    No captions found in this table.
+                </section>
             ) : (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                    <h2 className="text-lg font-semibold">
-                        {tableName} captions ({items.length})
-                    </h2>
-                    <ul className="mt-4 space-y-3">
-                        {items.length === 0 ? (
-                            <li className="text-sm text-zinc-500 dark:text-zinc-400">No rows found in this table.</li>
-                        ) : (
-                            items.map((item, index) => (
-                                <li
-                                    key={String(item.id ?? index)}
-                                    className="rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 shadow-sm dark:border-zinc-800 dark:bg-black dark:text-zinc-200"
-                                >
-                                    <p className="font-medium text-zinc-900 dark:text-zinc-100">{pickLabel(item)}</p>
-                                    {item.id !== undefined && item.id !== null ? (
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">ID: {String(item.id)}</p>
-                                    ) : null}
+                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                        Caption {activeIndex + 1} of {items.length}
+                    </p>
+                    <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{pickLabel(activeCaption)}</p>
+                    {activeCaptionId ? (
+                        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">ID: {activeCaptionId}</p>
+                    ) : null}
+                    <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current score: {formatScore(score)}</p>
 
-                                    {item.id !== undefined && item.id !== null ? (
-                                        <form action={handleVote} className="mt-3 flex flex-wrap gap-2">
-                                            <input name="caption_id" type="hidden" value={String(item.id)} />
-                                            <button
-                                                className="rounded-lg border border-emerald-600/40 bg-emerald-600/20 px-3 py-1 text-xs font-medium text-emerald-200"
-                                                name="vote"
-                                                type="submit"
-                                                value="up"
-                                            >
-                                                Upvote
-                                            </button>
-                                            <button
-                                                className="rounded-lg border border-rose-600/40 bg-rose-600/20 px-3 py-1 text-xs font-medium text-rose-200"
-                                                name="vote"
-                                                type="submit"
-                                                value="down"
-                                            >
-                                                Downvote
-                                            </button>
-                                        </form>
-                                    ) : (
-                                        <p className="mt-3 text-xs text-zinc-500">This caption cannot be voted on because it has no ID.</p>
-                                    )}
-                                </li>
-                            ))
-                        )}
-                    </ul>
+                    {activeCaptionId ? (
+                        <form action={handleVote} className="mt-5 flex flex-wrap items-center gap-2">
+                            <input name="caption_id" type="hidden" value={activeCaptionId} />
+                            <input name="index" type="hidden" value={String(activeIndex)} />
+                            <button
+                                className={`rounded-lg border px-4 py-2 text-sm font-medium ${
+                                    userVote === 1
+                                        ? "border-emerald-500 bg-emerald-500/40 text-emerald-100"
+                                        : "border-emerald-600/40 bg-emerald-600/20 text-emerald-200"
+                                }`}
+                                name="vote"
+                                type="submit"
+                                value="up"
+                            >
+                                Upvote
+                            </button>
+                            <button
+                                className={`rounded-lg border px-4 py-2 text-sm font-medium ${
+                                    userVote === -1
+                                        ? "border-rose-500 bg-rose-500/40 text-rose-100"
+                                        : "border-rose-600/40 bg-rose-600/20 text-rose-200"
+                                }`}
+                                name="vote"
+                                type="submit"
+                                value="down"
+                            >
+                                Downvote
+                            </button>
+                            {userVote ? (
+                                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Your current vote: {userVote === 1 ? "Upvote" : "Downvote"}
+                </span>
+                            ) : null}
+                        </form>
+                    ) : (
+                        <p className="mt-4 text-xs text-zinc-500">This caption cannot be voted on because it has no ID.</p>
+                    )}
+
+                    <div className="mt-6 flex items-center justify-between gap-2">
+                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href={`/week4?i=${previousIndex}`}>
+                            Previous
+                        </Link>
+                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href={`/week4?i=${nextIndex}`}>
+                            Next
+                        </Link>
+                    </div>
                 </section>
             )}
         </main>

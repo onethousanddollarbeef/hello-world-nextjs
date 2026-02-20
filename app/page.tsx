@@ -15,7 +15,7 @@ export default function Home() {
 
             <header className="space-y-3 rounded-xl border border-zinc-200/20 bg-black/40 p-6 backdrop-blur-sm">
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-300">Assignment Hub</p>
-                <h1 className="text-4xl font-semibold">Tasha&apos;s Hideous Laughter</h1>
+                <h1 className="text-4xl font-semibold">Julia&apos;s Hideous Laughter</h1>
                 <p className="text-zinc-200">
                     All assignments are accessible from this page so you can test everything from one place.
                 </p>
