@@ -2,6 +2,53 @@ import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
 
 const heroImageUrl = "https://images5.alphacoders.com/131/1317816.jpeg";
+const friendsIconUrl = "https://bg3.wiki/wiki/File:Friends.webp";
+
+type WeekCard = {
+    week: string;
+    title: string;
+    skill: string;
+    description: string;
+    href: string;
+    cta: string;
+    overlayImageUrl?: string;
+};
+
+const weekCards: WeekCard[] = [
+    {
+        week: "Week 1",
+        title: "Hello World",
+        skill: "Friends",
+        description: "First deployment basics: set up your app and start charming users.",
+        href: "/",
+        cta: "You are here",
+        overlayImageUrl: friendsIconUrl,
+    },
+    {
+        week: "Week 2",
+        title: "Supabase List",
+        skill: "Guidance",
+        description: "Use data guidance to query, inspect, and render table rows clearly.",
+        href: "/week2",
+        cta: "Open Week 2 card",
+    },
+    {
+        week: "Week 3",
+        title: "Protected Route",
+        skill: "Thaumaturgy",
+        description: "Secure route magic: auth flow, gated content, and dramatic protections.",
+        href: "/protected",
+        cta: "Open Week 3 card",
+    },
+    {
+        week: "Week 4",
+        title: "Caption Rating",
+        skill: "Produce Flame",
+        description: "Spark fast one-at-a-time voting with upvote/downvote updates.",
+        href: "/week4",
+        cta: "Open Week 4 card",
+    },
+];
 
 export default function Home() {
     return (
@@ -22,58 +69,55 @@ export default function Home() {
 
             <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <article className="rounded-2xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm transition-transform duration-150 hover:-translate-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">Week 1</p>
-                        <h2 className="mt-2 text-xl font-semibold">Hello World</h2>
-                        <p className="mt-2 text-sm text-zinc-200">Base app and deployment assignment.</p>
-                        <div className="mt-4">
-                            <Link className="rounded-lg border border-zinc-200/40 bg-black/30 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
-                                You are here
-                            </Link>
-                        </div>
-                    </article>
+                    {weekCards.map((card) => (
+                        <article
+                            key={card.week}
+                            className="relative overflow-hidden rounded-2xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm transition-transform duration-150 hover:-translate-y-1"
+                        >
+                            {card.overlayImageUrl ? (
+                                <div
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute -right-5 -top-8 h-36 w-36 opacity-30 blur-[0.3px]"
+                                    style={{
+                                        backgroundImage: `url('${card.overlayImageUrl}')`,
+                                        backgroundRepeat: "no-repeat",
+                                        backgroundPosition: "center",
+                                        backgroundSize: "contain",
+                                        filter: "drop-shadow(0 0 8px rgba(255,120,180,0.55))",
+                                    }}
+                                />
+                            ) : null}
 
-                    <article className="rounded-2xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm transition-transform duration-150 hover:-translate-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">Week 2</p>
-                        <h2 className="mt-2 text-xl font-semibold">Supabase List</h2>
-                        <p className="mt-2 text-sm text-zinc-200">Read captions from Supabase.</p>
-                        <div className="mt-4">
-                            <Link className="rounded-lg border border-zinc-200/40 bg-black/30 px-4 py-2 text-sm transition active:translate-y-0.5" href="/week2">
-                                Open Week 2 card
-                            </Link>
-                        </div>
-                    </article>
-
-                    <article className="rounded-2xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm transition-transform duration-150 hover:-translate-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">Week 3</p>
-                        <h2 className="mt-2 text-xl font-semibold">Protected Route</h2>
-                        <p className="mt-2 text-sm text-zinc-200">Google OAuth + gated UI route.</p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            <Link className="rounded-lg border border-zinc-200/40 bg-black/30 px-4 py-2 text-sm transition active:translate-y-0.5" href="/protected">
-                                Open Week 3 card
-                            </Link>
-                            <LoginButton />
-                        </div>
-                    </article>
-
-                    <article className="rounded-2xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm transition-transform duration-150 hover:-translate-y-1">
-                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">Week 4</p>
-                        <h2 className="mt-2 text-xl font-semibold">Caption Rating</h2>
-                        <p className="mt-2 text-sm text-zinc-200">One-caption-at-a-time voting with upvote/downvote updates.</p>
-                        <div className="mt-4">
-                            <Link className="rounded-lg border border-zinc-200/40 bg-black/30 px-4 py-2 text-sm transition active:translate-y-0.5" href="/week4">
-                                Open Week 4 card
-                            </Link>
-                        </div>
-                    </article>
+                            <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">{card.week}</p>
+                            <h2 className="mt-2 text-xl font-semibold">{card.title}</h2>
+                            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-amber-300">Spell Theme: {card.skill}</p>
+                            <p className="mt-2 text-sm text-zinc-200">{card.description}</p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <Link
+                                    className="rounded-lg border border-zinc-200/40 bg-black/30 px-4 py-2 text-sm transition active:translate-y-0.5"
+                                    href={card.href}
+                                >
+                                    {card.cta}
+                                </Link>
+                                {card.week === "Week 3" ? <LoginButton /> : null}
+                            </div>
+                        </article>
+                    ))}
                 </div>
 
                 <aside className="overflow-hidden rounded-2xl border border-zinc-200/20 bg-black/45 p-3 backdrop-blur-sm">
-                    <img
-                        alt="Main page side artwork"
-                        className="h-full min-h-[360px] w-full rounded-xl object-cover"
-                        src={heroImageUrl}
-                    />
+                    <div
+                        className="relative h-full min-h-[360px] w-full rounded-xl bg-cover bg-center"
+                        style={{
+                            backgroundImage: `linear-gradient(rgba(5, 5, 12, 0.2), rgba(5, 5, 12, 0.7)), url('${heroImageUrl}')`,
+                        }}
+                    >
+                        <div className="absolute inset-x-0 bottom-0 rounded-b-xl bg-black/45 p-4">
+                            <p className="text-xs uppercase tracking-[0.25em] text-zinc-300">Signature Spell Card</p>
+                            <p className="mt-2 text-lg font-semibold">Tasha&apos;s Hideous Laughter</p>
+                            <p className="mt-1 text-sm text-zinc-200">Baldur&apos;s Gate-inspired side panel for the assignment hub theme.</p>
+                        </div>
+                    </div>
                 </aside>
             </section>
 
