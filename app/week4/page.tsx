@@ -63,13 +63,23 @@ function getInsertCandidates(captionId: string, vote: "up" | "down", userId: str
     const numericVote = vote === "up" ? 1 : -1;
     const binaryVote = vote === "up" ? 1 : 0;
     const booleanVote = vote === "up";
+    const voteText = vote === "up" ? "upvote" : "downvote";
     const nowUtc = new Date().toISOString();
 
     return [
+        { caption_id: captionId, vote_value: numericVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: binaryVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: voteText, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: numericVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: binaryVote, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: voteText, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote_value: booleanVote, created_datetime_utc: nowUtc },
+
         { caption_id: captionId, vote: numericVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: binaryVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: vote === "up" ? "upvote" : "downvote", user_id: userId, created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: voteText, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, rating: numericVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, value: numericVote, user_id: userId, created_datetime_utc: nowUtc },
@@ -77,11 +87,11 @@ function getInsertCandidates(captionId: string, vote: "up" | "down", userId: str
         { caption_id: captionId, is_upvote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, upvote: booleanVote, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, downvote: !booleanVote, user_id: userId, created_datetime_utc: nowUtc },
-        { caption_id: captionId, user_id: userId, created_datetime_utc: nowUtc },
+
         { caption_id: captionId, vote: numericVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: binaryVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote, created_datetime_utc: nowUtc },
-        { caption_id: captionId, vote: vote === "up" ? "upvote" : "downvote", created_datetime_utc: nowUtc },
+        { caption_id: captionId, vote: voteText, created_datetime_utc: nowUtc },
         { caption_id: captionId, vote: booleanVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, rating: numericVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, value: numericVote, created_datetime_utc: nowUtc },
@@ -89,9 +99,12 @@ function getInsertCandidates(captionId: string, vote: "up" | "down", userId: str
         { caption_id: captionId, is_upvote: booleanVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, upvote: booleanVote, created_datetime_utc: nowUtc },
         { caption_id: captionId, downvote: !booleanVote, created_datetime_utc: nowUtc },
+
+        { caption_id: captionId, user_id: userId, created_datetime_utc: nowUtc },
         { caption_id: captionId, created_datetime_utc: nowUtc },
     ];
 }
+
 
 export default async function Week4Page({ searchParams }: Week4PageProps) {
     const params = searchParams ? await searchParams : undefined;
