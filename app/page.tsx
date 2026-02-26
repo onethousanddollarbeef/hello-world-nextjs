@@ -9,6 +9,7 @@ const spellArt = {
     guidance: "https://bg3.wiki/w/images/8/8b/Guidance.webp",
     thaumaturgy: "https://bg3.wiki/w/images/c/cf/Thaumaturgy.webp",
     produceFlame: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
+    hideousLaughter: "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54",
 };
 
 type WeekCard = {
@@ -58,6 +59,15 @@ const weekCards: WeekCard[] = [
         cta: "Open Week 4 card",
         overlayImageUrl: spellArt.produceFlame,
     },
+    {
+        week: "Week 5",
+        title: "Upload + Captions",
+        skill: "Tasha's Hideous Laughter",
+        description: "Upload an image and run the 4-step API caption pipeline.",
+        href: "/week5",
+        cta: "Open Week 5 card",
+        overlayImageUrl: spellArt.hideousLaughter,
+    },
 ];
 
 export default function Home() {
@@ -74,11 +84,11 @@ export default function Home() {
             <header className="space-y-3 rounded-xl border border-zinc-200/20 bg-black/40 p-6 backdrop-blur-sm">
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-300">Assignment Hub</p>
                 <h1 className="text-4xl font-semibold">Julia&apos;s Hideous Laughter</h1>
-                <p className="text-zinc-200">Leave a creature Prone Prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
+                <p className="text-zinc-200">Leave a creature Prone Prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
             </header>
 
             <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
                     {weekCards.map((card) => (
                         <article
                             key={card.week}
@@ -133,6 +143,7 @@ export default function Home() {
                 <p className="font-medium">Quick notes</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-200">
                     <li>Week 2 and Week 4 depend on <code>SUPABASE_TABLE</code>.</li>
+                    <li>Week 5 requires a logged-in user and API calls to <code>https://api.almostcrackd.ai</code>.</li>
                     <li>Week 3 sign-in returns through <code>/auth/callback</code>.</li>
                     <li>Week 4 stores votes as <code>+1/-1</code> and updates on re-vote.</li>
                 </ul>
