@@ -51,7 +51,6 @@ function formatScore(score: number) {
     return String(score);
 }
 
-
 function isVoteVisible(flag: string | undefined) {
     return flag !== "0";
 }
@@ -210,7 +209,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1</p>
-                    <h1 className="text-4xl font-semibold">Meme Voter</h1>
+                    <h1 className="text-4xl font-semibold">Humor Project</h1>
                     <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
                         View shared uploaded images + captions and vote up/down one meme at a time.
                     </p>
@@ -226,25 +225,28 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 </Link>
             </div>
 
-            {flashMessage ? (
+            {params?.vote === "saved" ? (
+                <section className="fixed inset-x-0 top-4 z-50 mx-auto w-[min(92vw,560px)] rounded-2xl border border-amber-300/70 bg-black/90 p-4 text-center shadow-2xl">
+                    <p className="text-lg font-semibold text-amber-200">Vote Saved!</p>
+                    <img alt="Vote saved celebration" className="mx-auto mt-2 h-24 w-auto rounded-lg border border-amber-200/40 object-cover" src="/vote-saved.png" />
+                    <p className="mt-2 text-sm uppercase tracking-[0.2em] text-amber-100">CRITICAL SUCCESS</p>
+                </section>
+            ) : flashMessage ? (
                 <section className="rounded-2xl border border-zinc-300 bg-zinc-100 p-4 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
                     {flashMessage}
                 </section>
             ) : null}
 
-            {user ? (
-                <section className="rounded-2xl border border-emerald-700/50 bg-emerald-900/20 p-4 text-sm text-emerald-200">
-                    Logged in as <strong>{user.email ?? user.id}</strong>.
-                </section>
-            ) : (
-                <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                    <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
-                    <p className="mt-2">You can browse memes, but only logged-in users can submit votes.</p>
-                    <div className="mt-4">
+            <section className="rounded-xl border border-zinc-700/70 bg-black/30 px-4 py-3 text-sm text-zinc-200">
+                {user ? (
+                    <>Logged in as <strong>{user.email ?? user.id}</strong>.</>
+                ) : (
+                    <div className="flex flex-wrap items-center gap-3">
+                        <span>Sign in required to vote.</span>
                         <LoginButton />
                     </div>
-                </section>
-            )}
+                )}
+            </section>
 
             {captionsError ? (
                 <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">

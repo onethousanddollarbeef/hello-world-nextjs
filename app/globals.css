@@ -3,17 +3,34 @@
 :root {
   --background: #0b0a11;
   --foreground: #f3f0ea;
+  --font-title: "Bookmania", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --font-body-small: "Mrs Eaves", "Palatino Linotype", Palatino, "Times New Roman", serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Palatino Linotype", Palatino, "Times New Roman", serif;
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-title);
+  --font-mono: var(--font-body-small);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Palatino Linotype", Palatino, "Times New Roman", serif;
+  font-family: var(--font-title);
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-title {
+  font-family: var(--font-title);
+}
+
+.text-xs,
+.text-sm,
+small,
+.font-small {
+  font-family: var(--font-body-small);
 }

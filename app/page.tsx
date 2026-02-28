@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
+import { createClient } from "@/utils/supabase/server";
 
 const heroImageUrl = "https://images5.alphacoders.com/131/1317816.jpeg";
 const project1SignatureImageUrl = "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54";
@@ -72,7 +73,7 @@ const weekCards: WeekCard[] = [
     },
     {
         week: "Project 1",
-        title: "Meme Voter",
+        title: "Humor Project",
         skill: "Tasha's Hideous Laughter",
         description: "Rate shared uploaded memes from the database with upvote/downvote.",
         href: "/project1",
@@ -81,7 +82,11 @@ const weekCards: WeekCard[] = [
     },
 ];
 
-export default function Home() {
+export default async function Home() {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
     return (
         <main className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 overflow-hidden px-6 py-16 text-zinc-100">
             <div
@@ -95,6 +100,12 @@ export default function Home() {
             <header className="space-y-3 rounded-xl border border-zinc-200/20 bg-black/40 p-6 backdrop-blur-sm">
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-300">Assignment Hub</p>
                 <h1 className="text-4xl font-semibold">Julia&apos;s Hideous Laughter</h1>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <LoginButton />
+                    <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-sm text-emerald-200">
+                        {user ? <>Logged in as <strong>{user.email ?? user.id}</strong>.</> : "Not logged in"}
+                    </p>
+                </div>
                 <p className="text-zinc-200">Leave a creature prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
             </header>
 
@@ -128,7 +139,6 @@ export default function Home() {
                                 >
                                     {card.cta}
                                 </Link>
-                                {["Week 3", "Week 4", "Week 5", "Project 1"].includes(card.week) ? <LoginButton /> : null}
                             </div>
                         </article>
                     ))}
@@ -143,7 +153,7 @@ export default function Home() {
                     >
                         <div className="absolute inset-x-0 bottom-0 rounded-b-xl bg-black/45 p-4">
                             <p className="text-xs uppercase tracking-[0.25em] text-zinc-300">Project 1 Finale</p>
-                            <p className="mt-2 text-lg font-semibold">Meme Voter</p>
+                            <p className="mt-2 text-lg font-semibold">Humor Project</p>
                             <p className="mt-1 text-sm text-zinc-200">Culmination challenge: vote through shared memes one at a time.</p>
                         </div>
                     </div>
@@ -155,7 +165,7 @@ export default function Home() {
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-200">
                     <li>Week 2 and Week 4 depend on <code>SUPABASE_TABLE</code>.</li>
                     <li>Week 5 requires a logged-in user and API calls to <code>https://api.almostcrackd.ai</code>.</li>
-                    <li>Week 3 sign-in returns through <code>/auth/callback</code>.</li>
+                    <li>Sign-in returns through <code>/auth/callback</code> and unlocks protected actions.</li>
                     <li>Week 4 stores votes as <code>+1/-1</code> and updates on re-vote.</li>
                     <li>Project 1 reads shared captions/images and uses the same vote mutation model.</li>
                 </ul>
