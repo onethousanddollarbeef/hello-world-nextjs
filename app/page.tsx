@@ -10,6 +10,7 @@ const spellArt = {
     thaumaturgy: "https://bg3.wiki/w/images/c/cf/Thaumaturgy.webp",
     produceFlame: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
     hideousLaughter: "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54",
+    project1: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
 };
 
 type WeekCard = {
@@ -68,6 +69,15 @@ const weekCards: WeekCard[] = [
         cta: "Open Week 5 card",
         overlayImageUrl: spellArt.hideousLaughter,
     },
+    {
+        week: "Project 1",
+        title: "Meme Voter",
+        skill: "Produce Flame",
+        description: "Rate shared uploaded memes from the database with upvote/downvote.",
+        href: "/project1",
+        cta: "Open Project 1",
+        overlayImageUrl: spellArt.project1,
+    },
 ];
 
 export default function Home() {
@@ -88,7 +98,7 @@ export default function Home() {
             </header>
 
             <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {weekCards.map((card) => (
                         <article
                             key={card.week}
@@ -146,6 +156,7 @@ export default function Home() {
                     <li>Week 5 requires a logged-in user and API calls to <code>https://api.almostcrackd.ai</code>.</li>
                     <li>Week 3 sign-in returns through <code>/auth/callback</code>.</li>
                     <li>Week 4 stores votes as <code>+1/-1</code> and updates on re-vote.</li>
+                    <li>Project 1 reads shared captions/images and uses the same vote mutation model.</li>
                 </ul>
             </section>
         </main>
