@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
+import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
 const heroImageUrl = "https://images5.alphacoders.com/131/1317816.jpeg";
@@ -87,6 +88,14 @@ export default async function Home() {
     const {
         data: { user },
     } = await supabase.auth.getUser();
+
+    const handleSignOut = async () => {
+        "use server";
+
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+        redirect("/");
+    };
     return (
         <main className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 overflow-hidden px-6 py-16 text-zinc-100">
             <div
@@ -101,7 +110,18 @@ export default async function Home() {
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-300">Assignment Hub</p>
                 <h1 className="text-4xl font-semibold">Julia&apos;s Hideous Laughter</h1>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <LoginButton />
+                    {user ? (
+                        <form action={handleSignOut}>
+                            <button
+                                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
+                                type="submit"
+                            >
+                                Log out
+                            </button>
+                        </form>
+                    ) : (
+                        <LoginButton />
+                    )}
                     <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-sm text-emerald-200">
                         {user ? <>Logged in as <strong>{user.email ?? user.id}</strong>.</> : "Not logged in"}
                     </p>

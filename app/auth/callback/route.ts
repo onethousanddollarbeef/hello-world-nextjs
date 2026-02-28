@@ -16,5 +16,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(new URL("/?auth=failed", request.url));
     }
 
-    return NextResponse.redirect(new URL("/protected", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
 }
