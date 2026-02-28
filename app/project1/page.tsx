@@ -116,7 +116,7 @@ async function resolveProfileId(supabase: Awaited<ReturnType<typeof createClient
     return null;
 }
 
-export default async function Project1Page({ searchParams }: Project1PageProps) {
+async function renderProject1Page({ searchParams }: Project1PageProps) {
     const params = searchParams ? await searchParams : undefined;
     const supabase = await createClient();
 
@@ -358,4 +358,26 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
             )}
         </main>
     );
+}
+
+
+export default async function Project1Page(props: Project1PageProps) {
+    try {
+        return await renderProject1Page(props);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown server error.";
+
+        return (
+            <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
+                <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
+                    <p className="font-semibold">Unable to load Project 1 right now</p>
+                    <p className="mt-2">{message}</p>
+                    <p className="mt-2">Please refresh or try again in a moment.</p>
+                </section>
+                <Link className="w-fit rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                    Back to Home
+                </Link>
+            </main>
+        );
+    }
 }
