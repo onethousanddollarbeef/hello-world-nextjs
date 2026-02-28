@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type VoteSavedFlashProps = {
@@ -25,11 +26,13 @@ export default function VoteSavedFlash({ imageSrc }: VoteSavedFlashProps) {
     return (
         <section className="fixed inset-x-0 top-4 z-50 mx-auto w-[min(92vw,560px)] rounded-2xl border border-amber-300/70 bg-black/90 p-4 text-center shadow-2xl">
             <p className="text-lg font-semibold text-amber-200">Vote Saved!</p>
-            <img
+            <Image
                 alt="Vote saved celebration"
                 className="mx-auto mt-2 h-24 w-auto rounded-lg border border-amber-200/40 object-cover"
+                height={96}
                 onError={() => setImageAvailable(false)}
                 src={imageSrc}
+                width={96}
             />
             {!imageAvailable ? (
                 <p className="mt-1 text-xs text-amber-200">Upload your image to public/vote-saved.png</p>

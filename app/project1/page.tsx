@@ -1,8 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 import VoteSavedFlash from "@/app/project1/vote-saved-flash";
+
+const project1BackgroundImageUrl = "https://cdn.mos.cms.futurecdn.net/pZczKMoLXicYuBvqFQEQvU.jpg";
 
 type CaptionRow = {
     id: string;
@@ -52,6 +55,7 @@ function formatScore(score: number) {
 
     return String(score);
 }
+
 
 function isVoteVisible(flag: string | undefined) {
     return flag !== "0";
@@ -208,7 +212,14 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
     const toggleVoteViewHref = `/project1?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
 
     return (
-        <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
+        <main className="relative mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 overflow-hidden px-6 py-16">
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-50"
+                style={{
+                    backgroundImage: `url(${project1BackgroundImageUrl})`,
+                }}
+            />
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1</p>
@@ -233,7 +244,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
 
             <div>
                 <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.18em] text-zinc-300 transition active:translate-y-0.5" href={toggleVoteViewHref}>
-                    {showVotes ? "Hide current score" : "Show current score"}
+                    {showVotes ? "Hide current approval" : "Show current approval"}
                 </Link>
             </div>
 
@@ -260,16 +271,22 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         Meme {activeIndex + 1} of {memeItems.length}
                     </p>
 
-                    <img
-                        alt="Uploaded meme"
-                        className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
-                        src={activeItem.imageUrl ?? ""}
-                    />
+                    {activeItem.imageUrl ? (
+                        <Image
+                            alt="Uploaded meme"
+                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
+                            height={420}
+                            loader={({ src }) => src}
+                            src={activeItem.imageUrl}
+                            unoptimized
+                            width={1200}
+                        />
+                    ) : null}
 
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{activeItem.content}</p>
                     <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Caption ID: {activeItem.captionId}</p>
                     {showVotes ? (
-                        <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current score: {formatScore(score)}</p>
+                        <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current approval: {formatScore(score)}</p>
                     ) : (
                         <p className="mt-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400">Score hidden</p>
                     )}
@@ -289,7 +306,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                             type="submit"
                             value="up"
                         >
-                            Upvote
+                            Approve
                         </button>
                         <button
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
@@ -302,11 +319,11 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                             type="submit"
                             value="down"
                         >
-                            Downvote
+                            Disapprove
                         </button>
                         {userVote ? (
                             <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                Your current vote: {userVote === 1 ? "Upvote" : "Downvote"}
+                Your current approval: {userVote === 1 ? "Approve" : "Disapprove"}
               </span>
                         ) : null}
                     </form>
