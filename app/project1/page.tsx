@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 
 type CaptionRow = {
@@ -148,7 +149,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
     const { data: captionsData, error: captionsError } = await supabase
         .from("captions")
         .select("id,content,image_id")
-        .order("created_at_utc", { ascending: false })
+        .order("id", { ascending: false })
         .limit(200);
 
     const captions = ((captionsData ?? []) as CaptionRow[]).filter((caption) => Boolean(caption.image_id));
@@ -224,6 +225,9 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 <section className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
                     <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
                     <p className="mt-2">You can browse memes, but only logged-in users can submit votes.</p>
+                    <div className="mt-4">
+                        <LoginButton />
+                    </div>
                 </section>
             )}
 

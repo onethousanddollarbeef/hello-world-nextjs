@@ -9,8 +9,9 @@ const spellArt = {
     guidance: "https://bg3.wiki/w/images/8/8b/Guidance.webp",
     thaumaturgy: "https://bg3.wiki/w/images/c/cf/Thaumaturgy.webp",
     produceFlame: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
+    viciousMockery: "https://bg3.wiki/w/images/9/9f/Vicious_Mockery.webp",
     hideousLaughter: "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54",
-    project1: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
+    project1: "https://bg3.wiki/w/images/9/9f/Vicious_Mockery.webp",
 };
 
 type WeekCard = {
@@ -72,7 +73,7 @@ const weekCards: WeekCard[] = [
     {
         week: "Project 1",
         title: "Meme Voter",
-        skill: "Produce Flame",
+        skill: "Vicious Mockery",
         description: "Rate shared uploaded memes from the database with upvote/downvote.",
         href: "/project1",
         cta: "Open Project 1",
@@ -94,7 +95,7 @@ export default function Home() {
             <header className="space-y-3 rounded-xl border border-zinc-200/20 bg-black/40 p-6 backdrop-blur-sm">
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-300">Assignment Hub</p>
                 <h1 className="text-4xl font-semibold">Julia&apos;s Hideous Laughter</h1>
-                <p className="text-zinc-200">Leave a creature Prone Prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
+                <p className="text-zinc-200">Leave a creature prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
             </header>
 
             <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -127,7 +128,7 @@ export default function Home() {
                                 >
                                     {card.cta}
                                 </Link>
-                                {card.week === "Week 3" ? <LoginButton /> : null}
+                                {["Week 3", "Week 4", "Week 5", "Project 1"].includes(card.week) ? <LoginButton /> : null}
                             </div>
                         </article>
                     ))}
@@ -143,7 +144,7 @@ export default function Home() {
                         <div className="absolute inset-x-0 bottom-0 rounded-b-xl bg-black/45 p-4">
                             <p className="text-xs uppercase tracking-[0.25em] text-zinc-300">Signature Spell Card</p>
                             <p className="mt-2 text-lg font-semibold">Tasha&apos;s Hideous Laughter</p>
-                            <p className="mt-1 text-sm text-zinc-200">Risum Peniatis! (&quot;Laugh out loud&quot;)</p>
+                            <p className="mt-1 text-sm text-zinc-200">Risum teneatis! (&quot;Hold your laughter!&quot;)</p>
                         </div>
                     </div>
                 </aside>
