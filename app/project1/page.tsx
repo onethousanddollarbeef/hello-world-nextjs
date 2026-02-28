@@ -25,6 +25,7 @@ type Project1PageProps = {
         i?: string;
         vote?: string;
         reason?: string;
+        showVotes?: string;
     }>;
 };
 
@@ -48,6 +49,11 @@ function formatScore(score: number) {
     }
 
     return String(score);
+}
+
+
+function isVoteVisible(flag: string | undefined) {
+    return flag !== "0";
 }
 
 function voteMessage(voteState?: string, reason?: string) {
@@ -95,6 +101,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
     } = await supabase.auth.getUser();
 
     const profileId = user ? await resolveProfileId(supabase, user.id) : null;
+    const showVotes = isVoteVisible(params?.showVotes);
 
     const handleVote = async (formData: FormData) => {
         "use server";
@@ -102,6 +109,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
         const captionId = formData.get("caption_id");
         const vote = formData.get("vote");
         const currentIndex = Number(formData.get("index") ?? 0);
+        const showVotesFlag = String(formData.get("showVotes") ?? "1");
 
         if (!captionId || !vote || (vote !== "up" && vote !== "down")) {
             redirect("/project1?vote=failed");
@@ -139,11 +147,11 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
 
         if (error) {
             const safeReason = encodeURIComponent(error.message);
-            redirect(`/project1?vote=failed&reason=${safeReason}&i=${currentIndex}`);
+            redirect(`/project1?vote=failed&reason=${safeReason}&i=${currentIndex}&showVotes=${showVotesFlag}`);
         }
 
         const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
-        redirect(`/project1?vote=saved&i=${nextIndex}`);
+        redirect(`/project1?vote=saved&i=${nextIndex}&showVotes=${showVotesFlag}`);
     };
 
     const { data: captionsData, error: captionsError } = await supabase
@@ -195,6 +203,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
 
     const previousIndex = Math.max(activeIndex - 1, 0);
     const nextIndex = memeItems.length > 0 ? Math.min(activeIndex + 1, memeItems.length - 1) : 0;
+    const toggleVoteViewHref = `/project1?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
@@ -208,6 +217,12 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 </div>
                 <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
                     Back to Home
+                </Link>
+            </div>
+
+            <div>
+                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.18em] text-zinc-300 transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                    {showVotes ? "Hide current score" : "Show current score"}
                 </Link>
             </div>
 
@@ -254,11 +269,16 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
 
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{activeItem.content}</p>
                     <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Caption ID: {activeItem.captionId}</p>
-                    <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current score: {formatScore(score)}</p>
+                    {showVotes ? (
+                        <p className="mt-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Current score: {formatScore(score)}</p>
+                    ) : (
+                        <p className="mt-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400">Score hidden</p>
+                    )}
 
                     <form action={handleVote} className="mt-5 flex flex-wrap items-center gap-2">
                         <input name="caption_id" type="hidden" value={activeItem.captionId} />
                         <input name="index" type="hidden" value={String(activeIndex)} />
+                        <input name="showVotes" type="hidden" value={showVotes ? "1" : "0"} />
                         <button
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === 1
@@ -293,10 +313,10 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     </form>
 
                     <div className="mt-6 flex items-center justify-between gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1?i=${previousIndex}`}>
+                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Previous
                         </Link>
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1?i=${nextIndex}`}>
+                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Next
                         </Link>
                     </div>

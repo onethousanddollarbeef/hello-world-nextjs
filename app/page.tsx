@@ -2,7 +2,7 @@ import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
 
 const heroImageUrl = "https://images5.alphacoders.com/131/1317816.jpeg";
-const tashaCardImageUrl = "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54";
+const project1SignatureImageUrl = "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54";
 
 const spellArt = {
     friends: "https://bg3.wiki/w/images/2/22/Friends.webp?20231106090137",
@@ -11,7 +11,7 @@ const spellArt = {
     produceFlame: "https://bg3.wiki/w/images/3/39/Produce_Flame.webp",
     viciousMockery: "https://bg3.wiki/w/images/9/9f/Vicious_Mockery.webp",
     hideousLaughter: "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54",
-    project1: "https://bg3.wiki/w/images/9/9f/Vicious_Mockery.webp",
+    project1: "https://www.mtgnexus.com/img/ccc/ren/5697/255177.jpg?t=2024-07-11-15:08:54",
 };
 
 type WeekCard = {
@@ -64,16 +64,16 @@ const weekCards: WeekCard[] = [
     {
         week: "Week 5",
         title: "Upload + Captions",
-        skill: "Tasha's Hideous Laughter",
+        skill: "Vicious Mockery",
         description: "Upload an image and run the 4-step API caption pipeline.",
         href: "/week5",
         cta: "Open Week 5 card",
-        overlayImageUrl: spellArt.hideousLaughter,
+        overlayImageUrl: spellArt.viciousMockery,
     },
     {
         week: "Project 1",
         title: "Meme Voter",
-        skill: "Vicious Mockery",
+        skill: "Tasha's Hideous Laughter",
         description: "Rate shared uploaded memes from the database with upvote/downvote.",
         href: "/project1",
         cta: "Open Project 1",
@@ -138,13 +138,13 @@ export default function Home() {
                     <div
                         className="relative h-full min-h-[360px] w-full rounded-xl bg-cover bg-center"
                         style={{
-                            backgroundImage: `linear-gradient(rgba(5, 5, 12, 0.2), rgba(5, 5, 12, 0.7)), url('${tashaCardImageUrl}')`,
+                            backgroundImage: `linear-gradient(rgba(5, 5, 12, 0.2), rgba(5, 5, 12, 0.7)), url('${project1SignatureImageUrl}')`,
                         }}
                     >
                         <div className="absolute inset-x-0 bottom-0 rounded-b-xl bg-black/45 p-4">
-                            <p className="text-xs uppercase tracking-[0.25em] text-zinc-300">Signature Spell Card</p>
-                            <p className="mt-2 text-lg font-semibold">Tasha&apos;s Hideous Laughter</p>
-                            <p className="mt-1 text-sm text-zinc-200">Risum teneatis! (&quot;Hold your laughter!&quot;)</p>
+                            <p className="text-xs uppercase tracking-[0.25em] text-zinc-300">Project 1 Finale</p>
+                            <p className="mt-2 text-lg font-semibold">Meme Voter</p>
+                            <p className="mt-1 text-sm text-zinc-200">Culmination challenge: vote through shared memes one at a time.</p>
                         </div>
                     </div>
                 </aside>
