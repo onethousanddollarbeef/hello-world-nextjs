@@ -59,6 +59,27 @@ function isVoteVisible(flag: string | undefined) {
     return flag !== "0";
 }
 
+function decodeReason(reason: string) {
+    try {
+        return decodeURIComponent(reason);
+    } catch {
+        return reason;
+    }
+}
+
+function isSafeImageSrc(src: string) {
+    if (src.startsWith("/")) {
+        return true;
+    }
+
+    try {
+        const parsed = new URL(src);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+        return false;
+    }
+}
+
 function voteMessage(voteState?: string, reason?: string) {
     if (voteState === "saved") {
         return "Vote saved.";
@@ -70,7 +91,7 @@ function voteMessage(voteState?: string, reason?: string) {
 
     if (voteState === "failed") {
         if (reason) {
-            return `Vote failed: ${decodeURIComponent(reason)}`;
+            return `Vote failed: ${decodeReason(reason)}`;
         }
 
         return "Vote failed. Please try again.";
@@ -183,11 +204,15 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
     }
 
     const memeItems = captions
-        .map((caption) => ({
-            captionId: caption.id,
-            content: caption.content ?? "(No caption text)",
-            imageUrl: caption.image_id ? imagesById.get(caption.image_id) ?? null : null,
-        }))
+        .map((caption) => {
+            const resolvedImageUrl = caption.image_id ? imagesById.get(caption.image_id) ?? null : null;
+
+            return {
+                captionId: caption.id,
+                content: caption.content ?? "(No caption text)",
+                imageUrl: resolvedImageUrl && isSafeImageSrc(resolvedImageUrl) ? resolvedImageUrl : null,
+            };
+        })
         .filter((item) => Boolean(item.imageUrl));
 
     const activeIndex = parseIndex(params?.i, memeItems.length);
