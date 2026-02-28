@@ -122,9 +122,7 @@ export default async function Home() {
                     ) : (
                         <LoginButton />
                     )}
-                    <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-sm text-emerald-200">
-                        {user ? <>Logged in as <strong>{user.email ?? user.id}</strong>.</> : "Not logged in"}
-                    </p>
+                    {user ? <p className="text-sm text-emerald-200">{user.email ?? user.id}</p> : null}
                 </div>
                 <p className="text-zinc-200">Leave a creature prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
             </header>
