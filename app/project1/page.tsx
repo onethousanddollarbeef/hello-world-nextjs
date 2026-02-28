@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
+import VoteSavedFlash from "@/app/project1/vote-saved-flash";
 
 type CaptionRow = {
     id: string;
@@ -51,6 +53,7 @@ function formatScore(score: number) {
 
     return String(score);
 }
+
 
 function isVoteVisible(flag: string | undefined) {
     return flag !== "0";
@@ -228,11 +231,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
             </div>
 
             {params?.vote === "saved" ? (
-                <section className="fixed inset-x-0 top-4 z-50 mx-auto w-[min(92vw,560px)] rounded-2xl border border-amber-300/70 bg-black/90 p-4 text-center shadow-2xl">
-                    <p className="text-lg font-semibold text-amber-200">Vote Saved!</p>
-                    <img alt="Vote saved celebration" className="mx-auto mt-2 h-24 w-auto rounded-lg border border-amber-200/40 object-cover" src="/vote-saved.png" />
-                    <p className="mt-2 text-sm uppercase tracking-[0.2em] text-amber-100">CRITICAL SUCCESS</p>
-                </section>
+                <VoteSavedFlash imageSrc="/vote-saved.png" />
             ) : flashMessage ? (
                 <section className="rounded-2xl border border-zinc-300 bg-zinc-100 p-4 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
                     {flashMessage}
@@ -265,11 +264,17 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         Meme {activeIndex + 1} of {memeItems.length}
                     </p>
 
-                    <img
-                        alt="Uploaded meme"
-                        className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
-                        src={activeItem.imageUrl ?? ""}
-                    />
+                    {activeItem.imageUrl ? (
+                        <Image
+                            alt="Uploaded meme"
+                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
+                            height={420}
+                            loader={({ src }) => src}
+                            src={activeItem.imageUrl}
+                            unoptimized
+                            width={1200}
+                        />
+                    ) : null}
 
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{activeItem.content}</p>
                     <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Caption ID: {activeItem.captionId}</p>

@@ -2,14 +2,29 @@
 
 import { createClient } from "@/utils/supabase/client";
 
-export default function LoginButton() {
+type LoginButtonProps = {
+    nextPath?: string;
+};
+
+function getCurrentPath() {
+    if (typeof window === "undefined") {
+        return "/";
+    }
+
+    return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+export default function LoginButton({ nextPath }: LoginButtonProps) {
     const handleLogin = async () => {
         const supabase = createClient();
+        const destination = nextPath ?? getCurrentPath();
+        const callbackUrl = new URL("/auth/callback", window.location.origin);
+        callbackUrl.searchParams.set("next", destination);
 
         await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: callbackUrl.toString(),
             },
         });
     };
