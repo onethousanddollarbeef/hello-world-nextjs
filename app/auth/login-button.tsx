@@ -6,6 +6,8 @@ type LoginButtonProps = {
     nextPath?: string;
 };
 
+const postLoginPathCookieName = "post_login_path";
+
 function getCurrentPath() {
     if (typeof window === "undefined") {
         return "/";
@@ -18,6 +20,9 @@ export default function LoginButton({ nextPath }: LoginButtonProps) {
     const handleLogin = async () => {
         const supabase = createClient();
         const destination = nextPath ?? getCurrentPath();
+
+        document.cookie = `${postLoginPathCookieName}=${encodeURIComponent(destination)}; Max-Age=600; Path=/; SameSite=Lax`;
+
         const callbackUrl = new URL("/auth/callback", window.location.origin);
         callbackUrl.searchParams.set("next", destination);
 
