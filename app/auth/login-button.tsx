@@ -14,49 +14,23 @@ function getCurrentPath() {
     return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
 
-function getAuthCallbackOrigin() {
-    const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-
-    if (!configured) {
-        return window.location.origin;
-    }
-
-    try {
-        return new URL(configured).origin;
-    } catch {
-        return window.location.origin;
-    }
-}
-
 export default function LoginButton({ nextPath }: LoginButtonProps) {
     const handleLogin = async () => {
         const supabase = createClient();
         const destination = nextPath ?? getCurrentPath();
-        const callbackOrigin = getAuthCallbackOrigin();
-        const callbackUrl = new URL("/auth/callback", callbackOrigin);
+        const callbackUrl = new URL("/auth/callback", window.location.origin);
         callbackUrl.searchParams.set("next", destination);
 
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
                 redirectTo: callbackUrl.toString(),
-                skipBrowserRedirect: true,
             },
         });
 
         if (error) {
             console.error("OAuth start failed", error.message);
-            return;
         }
-
-        if (!data?.url) {
-            console.error("OAuth start failed: missing redirect URL");
-            return;
-        }
-
-        const oauthUrl = new URL(data.url);
-        oauthUrl.searchParams.set("redirect_to", callbackUrl.toString());
-        window.location.assign(oauthUrl.toString());
     };
 
     return (
