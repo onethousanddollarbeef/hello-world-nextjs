@@ -122,9 +122,7 @@ export default async function Home() {
                     ) : (
                         <LoginButton />
                     )}
-                    <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-sm text-emerald-200">
-                        {user ? <>Logged in as <strong>{user.email ?? user.id}</strong>.</> : "Not logged in"}
-                    </p>
+                    {user ? <p className="text-sm text-emerald-200">{user.email ?? user.id}</p> : null}
                 </div>
                 <p className="text-zinc-200">Leave a creature prone with laughter, without the ability to get up. The creature must have an Intelligence of 5 or more!</p>
             </header>
@@ -181,24 +179,14 @@ export default async function Home() {
             </section>
 
             <section className="rounded-xl border border-zinc-200/20 bg-black/45 p-5 backdrop-blur-sm">
-                <p className="font-medium">Baldur&apos;s Gate 3 appreciation corner</p>
-                <div className="mt-2 space-y-3 text-sm text-zinc-200">
-                    <p>
-                        Baldur&apos;s Gate 3 is an all-timer RPG: incredible writing, unforgettable companions,
-                        and the kind of player freedom that makes every playthrough feel genuinely different!
-                    </p>
-                    <p>
-                        The game absolutely nails turn-based combat, environmental creativity, and class expression.
-                        BG3 RULES! DND RULES!
-                    </p>
-                    <p>
-                        From the soundtrack to voice acting to world design, it&apos;s just consistently excellent.
-                        It&apos;s one of the best modern examples of how ambitious, story-rich games can still feel personal.
-                    </p>
-                    <p>
-                        10/10 game. Peak fantasy adventure. Praise be to Baldur&apos;s Gate 3.
-                    </p>
-                </div>
+                <p className="font-medium">Quick notes</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-200">
+                    <li>Week 2 and Week 4 depend on <code>SUPABASE_TABLE</code>.</li>
+                    <li>Week 5 requires a logged-in user and API calls to <code>https://api.almostcrackd.ai</code>.</li>
+                    <li>Sign-in returns through <code>/auth/callback</code> and unlocks protected actions.</li>
+                    <li>Week 4 stores votes as <code>+1/-1</code> and updates on re-vote.</li>
+                    <li>Project 1 reads shared captions/images and uses the same vote mutation model.</li>
+                </ul>
             </section>
         </main>
     );

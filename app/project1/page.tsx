@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
@@ -53,7 +52,6 @@ function formatScore(score: number) {
 
     return String(score);
 }
-
 
 function isVoteVisible(flag: string | undefined) {
     return flag !== "0";
@@ -219,9 +217,18 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         View shared uploaded images + captions and vote up/down one meme at a time.
                     </p>
                 </div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
-                    Back to Home
-                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                    {user ? (
+                        <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-xs text-emerald-200">
+                            {user.email ?? user.id}
+                        </p>
+                    ) : (
+                        <LoginButton />
+                    )}
+                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                        Back to Home
+                    </Link>
+                </div>
             </div>
 
             <div>
@@ -238,17 +245,6 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 </section>
             ) : null}
 
-            <section className="rounded-xl border border-zinc-700/70 bg-black/30 px-4 py-3 text-sm text-zinc-200">
-                {user ? (
-                    <>Logged in as <strong>{user.email ?? user.id}</strong>.</>
-                ) : (
-                    <div className="flex flex-wrap items-center gap-3">
-                        <span>Sign in required to vote.</span>
-                        <LoginButton />
-                    </div>
-                )}
-            </section>
-
             {captionsError ? (
                 <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
                     <p className="font-semibold">Unable to load captions</p>
@@ -264,17 +260,11 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         Meme {activeIndex + 1} of {memeItems.length}
                     </p>
 
-                    {activeItem.imageUrl ? (
-                        <Image
-                            alt="Uploaded meme"
-                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
-                            height={420}
-                            loader={({ src }) => src}
-                            src={activeItem.imageUrl}
-                            unoptimized
-                            width={1200}
-                        />
-                    ) : null}
+                    <img
+                        alt="Uploaded meme"
+                        className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
+                        src={activeItem.imageUrl ?? ""}
+                    />
 
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{activeItem.content}</p>
                     <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Caption ID: {activeItem.captionId}</p>
