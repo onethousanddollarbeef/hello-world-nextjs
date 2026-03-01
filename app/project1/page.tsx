@@ -1,8 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 import VoteSavedFlash from "@/app/project1/vote-saved-flash";
+import Week5UploadClient from "@/app/week5/upload-client";
 
 type CaptionRow = {
     id: string;
@@ -260,11 +262,16 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         Meme {activeIndex + 1} of {memeItems.length}
                     </p>
 
-                    <img
-                        alt="Uploaded meme"
-                        className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
-                        src={activeItem.imageUrl ?? ""}
-                    />
+                    {activeItem.imageUrl ? (
+                        <Image
+                            alt="Uploaded meme"
+                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
+                            height={420}
+                            src={activeItem.imageUrl}
+                            unoptimized
+                            width={1200}
+                        />
+                    ) : null}
 
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{activeItem.content}</p>
                     <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Caption ID: {activeItem.captionId}</p>
@@ -306,8 +313,8 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         </button>
                         {userVote ? (
                             <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                Your current vote: {userVote === 1 ? "Upvote" : "Downvote"}
-              </span>
+                                Your current vote: {userVote === 1 ? "Upvote" : "Downvote"}
+                            </span>
                         ) : null}
                     </form>
 
@@ -321,6 +328,19 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     </div>
                 </section>
             )}
+
+            <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1 Extension</p>
+                <h2 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Upload an image and generate captions</h2>
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                    This includes your Week 5 pipeline directly in Project 1 so users can upload photos, generate captions,
+                    and then vote on public captions in the meme voter above.
+                </p>
+
+                <div className="mt-5">
+                    <Week5UploadClient />
+                </div>
+            </section>
         </main>
     );
 }
