@@ -21,12 +21,27 @@ export default function LoginButton({ nextPath }: LoginButtonProps) {
         const callbackUrl = new URL("/auth/callback", window.location.origin);
         callbackUrl.searchParams.set("next", destination);
 
-        await supabase.auth.signInWithOAuth({
+        const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
                 redirectTo: callbackUrl.toString(),
+                skipBrowserRedirect: true,
             },
         });
+
+        if (error) {
+            console.error("OAuth start failed", error.message);
+            return;
+        }
+
+        if (!data?.url) {
+            console.error("OAuth start failed: missing redirect URL");
+            return;
+        }
+
+        const oauthUrl = new URL(data.url);
+        oauthUrl.searchParams.set("redirect_to", callbackUrl.toString());
+        window.location.assign(oauthUrl.toString());
     };
 
     return (
