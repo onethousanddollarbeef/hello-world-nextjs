@@ -294,7 +294,6 @@ async function renderProject1Page({ searchParams }: Project1PageProps) {
                             alt="Uploaded meme"
                             className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
                             height={420}
-                            loader={({ src }) => src}
                             src={activeItem.imageUrl}
                             unoptimized
                             width={1200}
