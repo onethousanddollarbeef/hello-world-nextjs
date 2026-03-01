@@ -15,7 +15,7 @@ function getCurrentPath() {
 }
 
 export default function LoginButton({ nextPath }: LoginButtonProps) {
-    const handleLogin = async () => {
+    const startOAuthLogin = async () => {
         const supabase = createClient();
         const destination = nextPath ?? getCurrentPath();
         const callbackUrl = new URL("/auth/callback", window.location.origin);
@@ -34,12 +34,22 @@ export default function LoginButton({ nextPath }: LoginButtonProps) {
     };
 
     return (
-        <button
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
-            onClick={handleLogin}
-            type="button"
-        >
-            Sign in with Google
-        </button>
+        <div className="flex flex-wrap gap-2">
+            <button
+                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
+                onClick={startOAuthLogin}
+                type="button"
+            >
+                Sign in with Google
+            </button>
+
+            <button
+                className="rounded-lg border border-white/50 bg-transparent px-4 py-2 text-sm font-medium text-white"
+                onClick={startOAuthLogin}
+                type="button"
+            >
+                test login
+            </button>
+        </div>
     );
 }
