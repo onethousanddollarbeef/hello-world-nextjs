@@ -59,27 +59,6 @@ function isVoteVisible(flag: string | undefined) {
     return flag !== "0";
 }
 
-function decodeReason(reason: string) {
-    try {
-        return decodeURIComponent(reason);
-    } catch {
-        return reason;
-    }
-}
-
-function isSafeImageSrc(src: string) {
-    if (src.startsWith("/")) {
-        return true;
-    }
-
-    try {
-        const parsed = new URL(src);
-        return parsed.protocol === "http:" || parsed.protocol === "https:";
-    } catch {
-        return false;
-    }
-}
-
 function voteMessage(voteState?: string, reason?: string) {
     if (voteState === "saved") {
         return "Vote saved.";
@@ -91,7 +70,7 @@ function voteMessage(voteState?: string, reason?: string) {
 
     if (voteState === "failed") {
         if (reason) {
-            return `Vote failed: ${decodeReason(reason)}`;
+            return `Vote failed: ${decodeURIComponent(reason)}`;
         }
 
         return "Vote failed. Please try again.";
@@ -116,7 +95,7 @@ async function resolveProfileId(supabase: Awaited<ReturnType<typeof createClient
     return null;
 }
 
-async function renderProject1Page({ searchParams }: Project1PageProps) {
+export default async function Project1Page({ searchParams }: Project1PageProps) {
     const params = searchParams ? await searchParams : undefined;
     const supabase = await createClient();
 
@@ -204,15 +183,11 @@ async function renderProject1Page({ searchParams }: Project1PageProps) {
     }
 
     const memeItems = captions
-        .map((caption) => {
-            const resolvedImageUrl = caption.image_id ? imagesById.get(caption.image_id) ?? null : null;
-
-            return {
-                captionId: caption.id,
-                content: caption.content ?? "(No caption text)",
-                imageUrl: resolvedImageUrl && isSafeImageSrc(resolvedImageUrl) ? resolvedImageUrl : null,
-            };
-        })
+        .map((caption) => ({
+            captionId: caption.id,
+            content: caption.content ?? "(No caption text)",
+            imageUrl: caption.image_id ? imagesById.get(caption.image_id) ?? null : null,
+        }))
         .filter((item) => Boolean(item.imageUrl));
 
     const activeIndex = parseIndex(params?.i, memeItems.length);
@@ -294,6 +269,7 @@ async function renderProject1Page({ searchParams }: Project1PageProps) {
                             alt="Uploaded meme"
                             className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
                             height={420}
+                            loader={({ src }) => src}
                             src={activeItem.imageUrl}
                             unoptimized
                             width={1200}
@@ -357,26 +333,4 @@ async function renderProject1Page({ searchParams }: Project1PageProps) {
             )}
         </main>
     );
-}
-
-
-export default async function Project1Page(props: Project1PageProps) {
-    try {
-        return await renderProject1Page(props);
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown server error.";
-
-        return (
-            <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
-                <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
-                    <p className="font-semibold">Unable to load Project 1 right now</p>
-                    <p className="mt-2">{message}</p>
-                    <p className="mt-2">Please refresh or try again in a moment.</p>
-                </section>
-                <Link className="w-fit rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
-                    Back to Home
-                </Link>
-            </main>
-        );
-    }
 }
