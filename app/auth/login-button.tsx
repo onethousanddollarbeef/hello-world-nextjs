@@ -14,11 +14,26 @@ function getCurrentPath() {
     return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
 
+function getAuthCallbackOrigin() {
+    const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+    if (!configured) {
+        return window.location.origin;
+    }
+
+    try {
+        return new URL(configured).origin;
+    } catch {
+        return window.location.origin;
+    }
+}
+
 export default function LoginButton({ nextPath }: LoginButtonProps) {
     const handleLogin = async () => {
         const supabase = createClient();
         const destination = nextPath ?? getCurrentPath();
-        const callbackUrl = new URL("/auth/callback", window.location.origin);
+        const callbackOrigin = getAuthCallbackOrigin();
+        const callbackUrl = new URL("/auth/callback", callbackOrigin);
         callbackUrl.searchParams.set("next", destination);
 
         const { data, error } = await supabase.auth.signInWithOAuth({
