@@ -7,6 +7,7 @@ type LoginButtonProps = {
 };
 
 const postLoginPathCookieName = "post_login_path";
+const fixedAuthCallbackOrigin = "https://hello-world-nextjs-25phnbs5p-onethousanddollarbeefs-projects.vercel.app";
 
 function getCurrentPath() {
     if (typeof window === "undefined") {
@@ -23,7 +24,7 @@ export default function LoginButton({ nextPath }: LoginButtonProps) {
 
         document.cookie = `${postLoginPathCookieName}=${encodeURIComponent(destination)}; Max-Age=600; Path=/; SameSite=Lax`;
 
-        const callbackUrl = new URL("/auth/callback", window.location.origin);
+        const callbackUrl = new URL("/auth/callback", fixedAuthCallbackOrigin);
         callbackUrl.searchParams.set("next", destination);
 
         const { error } = await supabase.auth.signInWithOAuth({
