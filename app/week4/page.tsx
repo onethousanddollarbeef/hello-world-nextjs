@@ -145,15 +145,14 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         }
 
         const voteValue = vote === "up" ? 1 : -1;
-        const nowUtc = new Date().toISOString();
 
         const { error } = await supabase.from("caption_votes").upsert(
             {
                 caption_id: String(captionId),
                 profile_id: profileId,
                 vote_value: voteValue,
-                created_datetime_utc: nowUtc,
-                modified_datetime_utc: nowUtc,
+                created_by_user_id: profileId,
+                modified_by_user_id: profileId,
             },
             { onConflict: "profile_id,caption_id" }
         );
