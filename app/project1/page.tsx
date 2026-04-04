@@ -349,8 +349,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1 Extension</p>
                 <h2 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Upload an image and generate captions</h2>
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                    This includes your Week 5 pipeline directly in Project 1 so users can upload photos, generate captions,
-                    and then vote on public captions in the meme voter above.
+                    Upload a photo, generate captions, and then vote on public captions above.
                 </p>
 
                 <div className="mt-5">
