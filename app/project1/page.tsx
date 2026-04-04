@@ -135,15 +135,14 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
         }
 
         const voteValue = vote === "up" ? 1 : -1;
-        const nowUtc = new Date().toISOString();
 
         const { error } = await supabase.from("caption_votes").upsert(
             {
                 caption_id: String(captionId),
                 profile_id: profileId,
                 vote_value: voteValue,
-                created_datetime_utc: nowUtc,
-                modified_datetime_utc: nowUtc,
+                created_by_user_id: profileId,
+                modified_by_user_id: profileId,
             },
             { onConflict: "profile_id,caption_id" },
         );
@@ -153,7 +152,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
             redirect(`/project1?vote=failed&reason=${safeReason}&i=${currentIndex}&showVotes=${showVotesFlag}`);
         }
 
-        const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
+        const nextIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
         redirect(`/project1?vote=saved&i=${nextIndex}&showVotes=${showVotesFlag}`);
     };
 
@@ -190,8 +189,22 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
         }))
         .filter((item) => Boolean(item.imageUrl));
 
-    const activeIndex = parseIndex(params?.i, memeItems.length);
-    const activeItem = memeItems[activeIndex] ?? null;
+    const { data: myVotesData } = profileId
+        ? await supabase.from("caption_votes").select("caption_id").eq("profile_id", profileId)
+        : { data: null };
+
+    const votedCaptionIds = new Set(
+        ((myVotesData ?? []) as Array<{ caption_id?: string | null }>)
+            .map((row) => row.caption_id)
+            .filter((value): value is string => Boolean(value)),
+    );
+
+    const unratedMemeItems = profileId
+        ? memeItems.filter((item) => !votedCaptionIds.has(item.captionId))
+        : memeItems;
+
+    const activeIndex = parseIndex(params?.i, unratedMemeItems.length);
+    const activeItem = unratedMemeItems[activeIndex] ?? null;
 
     const { data: votesData } = activeItem
         ? await supabase
@@ -206,7 +219,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
     const flashMessage = voteMessage(params?.vote, params?.reason);
 
     const previousIndex = Math.max(activeIndex - 1, 0);
-    const nextIndex = memeItems.length > 0 ? Math.min(activeIndex + 1, memeItems.length - 1) : 0;
+    const nextIndex = unratedMemeItems.length > 0 ? Math.min(activeIndex + 1, unratedMemeItems.length - 1) : 0;
     const toggleVoteViewHref = `/project1?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
 
     return (
@@ -230,11 +243,14 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
+                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/assignments">
+                        Previous assignments
+                    </Link>
                 </div>
             </div>
 
             <div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.18em] text-zinc-300 transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.18em] text-zinc-800 transition active:translate-y-0.5 dark:text-zinc-200" href={toggleVoteViewHref}>
                     {showVotes ? "Hide current score" : "Show current score"}
                 </Link>
             </div>
@@ -254,12 +270,12 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 </section>
             ) : !activeItem ? (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                    No memes found yet.
+                    {profileId ? "No unrated memes left right now. Check back after more captions are posted." : "No memes found yet."}
                 </section>
             ) : (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                     <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                        Meme {activeIndex + 1} of {memeItems.length}
+                        Meme {activeIndex + 1} of {unratedMemeItems.length}
                     </p>
 
                     {activeItem.imageUrl ? (
@@ -288,8 +304,8 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         <button
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === 1
-                                    ? "border-emerald-500 bg-emerald-500/40 text-emerald-100"
-                                    : "border-emerald-600/40 bg-emerald-600/20 text-emerald-200"
+                                    ? "border-emerald-700 bg-emerald-200 text-emerald-900 dark:border-emerald-400 dark:bg-emerald-500/40 dark:text-emerald-50"
+                                    : "border-emerald-700 bg-emerald-100 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-100"
                             }`}
                             disabled={!user}
                             name="vote"
@@ -301,8 +317,8 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         <button
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === -1
-                                    ? "border-rose-500 bg-rose-500/40 text-rose-100"
-                                    : "border-rose-600/40 bg-rose-600/20 text-rose-200"
+                                    ? "border-rose-700 bg-rose-200 text-rose-900 dark:border-rose-400 dark:bg-rose-500/40 dark:text-rose-50"
+                                    : "border-rose-700 bg-rose-100 text-rose-900 dark:border-rose-500 dark:bg-rose-500/20 dark:text-rose-100"
                             }`}
                             disabled={!user}
                             name="vote"
