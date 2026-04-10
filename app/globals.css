@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ff4fa8;
-  --foreground: #3d0030;
+  --background: #0b0a11;
+  --foreground: #ffe5f5;
   --font-title: "Bookmania", "Palatino Linotype", Palatino, "Times New Roman", serif;
   --font-body-small: "Mrs Eaves", "Palatino Linotype", Palatino, "Times New Roman", serif;
 }
@@ -18,6 +18,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-title);
+}
+
+.bg-white,
+.bg-zinc-100,
+.bg-zinc-50 {
+  background-color: rgba(14, 9, 18, 0.92) !important;
+}
+
+.border-zinc-200,
+.border-zinc-300,
+.border-zinc-700 {
+  border-color: #ff8fcb !important;
 }
 
 h1,
