@@ -5,6 +5,7 @@ import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 import VoteSavedFlash from "@/app/project1/vote-saved-flash";
 import Week5UploadClient from "@/app/week5/upload-client";
+import VoteButton from "@/app/project1/vote-button";
 
 type CaptionRow = {
     id: string;
@@ -228,9 +229,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1</p>
                     <h1 className="text-4xl font-semibold">Humor Project</h1>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        View shared uploaded images + captions and vote up/down one meme at a time.
-                    </p>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Rate memes fast: vote, move on, repeat.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     {user ? (
@@ -248,6 +247,17 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     </Link>
                 </div>
             </div>
+
+            <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Start here</p>
+                <h2 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Step 1: Rate the current meme</h2>
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Use Upvote or Downvote, then the app advances to the next unrated meme.</p>
+                <div className="mt-4">
+                    <a className="inline-flex rounded-lg border border-pink-500 bg-pink-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-500 active:translate-y-0.5" href="#meme-rater">
+                        Start rating now →
+                    </a>
+                </div>
+            </section>
 
             <div>
                 <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.18em] text-zinc-800 transition active:translate-y-0.5 dark:text-zinc-200" href={toggleVoteViewHref}>
@@ -273,7 +283,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     {profileId ? "No unrated memes left right now. Check back after more captions are posted." : "No memes found yet."}
                 </section>
             ) : (
-                <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900" id="meme-rater">
                     <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                         Meme {activeIndex + 1} of {unratedMemeItems.length}
                     </p>
@@ -301,32 +311,26 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         <input name="caption_id" type="hidden" value={activeItem.captionId} />
                         <input name="index" type="hidden" value={String(activeIndex)} />
                         <input name="showVotes" type="hidden" value={showVotes ? "1" : "0"} />
-                        <button
+                        <VoteButton
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === 1
                                     ? "border-emerald-700 bg-emerald-200 text-emerald-900 dark:border-emerald-400 dark:bg-emerald-500/40 dark:text-emerald-50"
                                     : "border-emerald-700 bg-emerald-100 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-100"
                             }`}
                             disabled={!user}
-                            name="vote"
-                            type="submit"
+                            label="Upvote"
                             value="up"
-                        >
-                            Upvote
-                        </button>
-                        <button
+                        />
+                        <VoteButton
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === -1
                                     ? "border-rose-700 bg-rose-200 text-rose-900 dark:border-rose-400 dark:bg-rose-500/40 dark:text-rose-50"
                                     : "border-rose-700 bg-rose-100 text-rose-900 dark:border-rose-500 dark:bg-rose-500/20 dark:text-rose-100"
                             }`}
                             disabled={!user}
-                            name="vote"
-                            type="submit"
+                            label="Downvote"
                             value="down"
-                        >
-                            Downvote
-                        </button>
+                        />
                         {userVote ? (
                             <span className="text-xs text-zinc-500 dark:text-zinc-400">
                                 Your current vote: {userVote === 1 ? "Upvote" : "Downvote"}
@@ -346,7 +350,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
             )}
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1 Extension</p>
+                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Step 2 (Optional)</p>
                 <h2 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Upload an image and generate captions</h2>
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
                     Upload a photo, generate captions, and then vote on public captions above.
