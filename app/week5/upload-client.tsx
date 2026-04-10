@@ -175,11 +175,12 @@ export default function Week5UploadClient() {
             <form className="mt-4 flex flex-col gap-3" onSubmit={handleSubmit}>
                 <input
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic"
+                    className="w-fit cursor-pointer rounded-lg border border-pink-700 bg-pink-100 px-3 py-2 text-sm text-pink-900 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-pink-700 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-pink-50 hover:bg-pink-200"
                     onChange={handleFileChange}
                     type="file"
                 />
                 <button
-                    className="w-fit rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5 disabled:opacity-50"
+                    className="w-fit rounded-lg border border-pink-700 bg-pink-100 px-4 py-2 text-sm font-medium text-pink-900 transition active:translate-y-0.5 disabled:opacity-50 dark:border-pink-300 dark:bg-pink-900/40 dark:text-pink-50"
                     disabled={!canSubmit}
                     type="submit"
                 >
