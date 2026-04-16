@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ff4fa8;
-  --foreground: #3d0030;
+  --background: #0b0a11;
+  --foreground: #ffe5f5;
   --font-title: "Bookmania", "Palatino Linotype", Palatino, "Times New Roman", serif;
   --font-body-small: "Mrs Eaves", "Palatino Linotype", Palatino, "Times New Roman", serif;
 }

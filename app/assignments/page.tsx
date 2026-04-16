@@ -32,6 +32,9 @@ export default async function AssignmentsPage() {
                     <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100">Previous Assignment Pages</h1>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
+                        Home
+                    </Link>
                     <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/project1">
                         Back to Project 1
                     </Link>
@@ -46,6 +49,9 @@ export default async function AssignmentsPage() {
             </header>
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">
+                    Choose an assignment page below. Week 2 is a direct Supabase table preview by design.
+                </p>
                 <ul className="space-y-3">
                     {assignments.map((item) => (
                         <li key={item.href}>
