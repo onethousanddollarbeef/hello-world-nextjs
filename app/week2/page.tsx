@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 
 type RowValue = string | number | boolean | null;
@@ -24,6 +25,16 @@ function pickLabel(row: SupabaseRow) {
 export default async function Week2Page() {
     const tableName = process.env.SUPABASE_TABLE;
     const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    async function handleSignOut() {
+        "use server";
+
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+    }
 
     const { data, error } = tableName
         ? await supabase.from(tableName).select("*").limit(20)
@@ -38,9 +49,20 @@ export default async function Week2Page() {
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 2 Assignment</p>
                     <h1 className="text-4xl font-semibold">Supabase List Page</h1>
                 </div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
-                    Back to Home
-                </Link>
+                <div className="flex items-center gap-2">
+                    {user ? (
+                        <form action={handleSignOut}>
+                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
+                                Log out
+                            </button>
+                        </form>
+                    ) : (
+                        <LoginButton />
+                    )}
+                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" href="/">
+                        Back to Home
+                    </Link>
+                </div>
             </div>
 
             {!tableName ? (
