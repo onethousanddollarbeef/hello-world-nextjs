@@ -211,12 +211,27 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">A flame in your hand sheds a light in a 9 m (30 ft) radius and deals 1d8⁠ ⁠Fire damage when thrown.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" href={toggleVoteViewHref}>
                         {showVotes ? "Hide scores" : "Show scores"}
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
+                    {user ? (
+                        <form action={async () => {
+                            "use server";
+
+                            const supabase = await createClient();
+                            await supabase.auth.signOut();
+                            redirect("/");
+                        }}>
+                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" type="submit">
+                                Log out
+                            </button>
+                        </form>
+                    ) : (
+                        <LoginButton />
+                    )}
                 </div>
             </div>
 
