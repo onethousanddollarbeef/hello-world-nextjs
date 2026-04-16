@@ -32,15 +32,15 @@ export default async function AssignmentsPage() {
                     <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100">Previous Assignment Pages</h1>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
+                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" href="/">
                         Home
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/project1">
+                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" href="/project1">
                         Back to Project 1
                     </Link>
                     {user ? (
                         <form action={handleSignOut}>
-                            <button className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black" type="submit">
+                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
                                 Sign out
                             </button>
                         </form>
@@ -56,7 +56,7 @@ export default async function AssignmentsPage() {
                     {assignments.map((item) => (
                         <li key={item.href}>
                             <Link
-                                className="block rounded-lg border border-zinc-700 px-4 py-3 text-sm text-zinc-800 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                className="block rounded-lg border border-pink-400 bg-white px-4 py-3 text-sm font-medium text-pink-700 transition hover:bg-pink-50"
                                 href={item.href}
                             >
                                 {item.label}

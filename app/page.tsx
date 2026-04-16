@@ -1,6 +1,5 @@
 import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
-import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
 const assignments = [
@@ -21,6 +20,10 @@ export default async function Home() {
         redirect("/project1");
     }
 
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+    };
+
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-6 py-16">
             <header className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -29,8 +32,21 @@ export default async function Home() {
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
                     Sign in to start voting immediately in Project 1.
                 </p>
-                <div className="mt-5">
-                    <LoginButton />
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                    {user ? (
+                        <>
+                            <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-xs text-emerald-200">
+                                {user.email ?? user.id}
+                            </p>
+                            <form action={handleSignOut}>
+                                <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
+                                    Log out
+                                </button>
+                            </form>
+                        </>
+                    ) : (
+                        <LoginButton />
+                    )}
                 </div>
             </header>
 
@@ -42,7 +58,7 @@ export default async function Home() {
                 <div className="mt-4 flex flex-wrap gap-2">
                     {assignments.map((item) => (
                         <Link
-                            className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-800 transition active:translate-y-0.5 dark:text-zinc-200"
+                            className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5"
                             href={item.href}
                             key={item.href}
                         >
