@@ -5,6 +5,7 @@ import LoginButton from "@/app/auth/login-button";
 import { createClient } from "@/utils/supabase/server";
 import Week5UploadClient from "@/app/week5/upload-client";
 import VoteButton from "@/app/project1/vote-button";
+import AutoDismissNotice from "@/app/project1/auto-dismiss-notice";
 
 type CaptionRow = {
     id: string;
@@ -226,7 +227,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                                 {user.email ?? user.id}
                             </p>
                             <form action={handleSignOut}>
-                                <button className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" type="submit">
+                                <button className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" type="submit">
                                     Log out
                                 </button>
                             </form>
@@ -234,22 +235,20 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     ) : (
                         <LoginButton />
                     )}
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/project1">
+                    <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href="/project1">
                         How it works
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                    <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href="/">
                         Home
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/assignments">
+                    <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href="/assignments">
                         Previous assignments
                     </Link>
                 </div>
             </div>
 
             {params?.vote === "saved" ? (
-                <section className="rounded-2xl border border-pink-300 bg-pink-100 p-4 text-sm font-semibold text-pink-900 dark:border-pink-400/40 dark:bg-pink-500/10 dark:text-pink-100">
-                    ✨ Vote saved! Sparkles awarded. ✨
-                </section>
+                <AutoDismissNotice message="✨ Vote saved! Sparkles awarded. ✨" />
             ) : null}
 
             {flashMessage && params?.vote !== "saved" ? (
@@ -320,7 +319,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     </form>
 
                     <div className="mt-6 flex items-center gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1/app?i=${previousIndex}`}>
+                        <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href={`/project1/app?i=${previousIndex}`}>
                             Previous
                         </Link>
                     </div>
