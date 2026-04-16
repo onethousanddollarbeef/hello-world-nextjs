@@ -16,8 +16,9 @@ export default async function Home() {
         data: { user },
     } = await supabase.auth.getUser();
 
-    const handleSignOut = async () => {
-        "use server";
+    if (user) {
+        redirect("/project1");
+    }
 
         const supabase = await createClient();
         await supabase.auth.signOut();
