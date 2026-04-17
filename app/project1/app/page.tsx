@@ -1,0 +1,342 @@
+import Link from "next/link";
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import LoginButton from "@/app/auth/login-button";
+import { createClient } from "@/utils/supabase/server";
+import Week5UploadClient from "@/app/week5/upload-client";
+import VoteButton from "@/app/project1/vote-button";
+import AutoDismissNotice from "@/app/project1/auto-dismiss-notice";
+
+type CaptionRow = {
+    id: string;
+    content?: string | null;
+    image_id?: string | null;
+    is_public?: boolean | null;
+};
+
+type ImageRow = {
+    id: string;
+    url?: string | null;
+};
+
+type VoteRow = {
+    caption_id: string;
+    vote_value: number;
+    profile_id: string;
+};
+
+type Project1PageProps = {
+    searchParams?: Promise<{
+        i?: string;
+        vote?: string;
+        reason?: string;
+    }>;
+};
+
+function parseIndex(rawIndex: string | undefined, itemCount: number) {
+    if (itemCount === 0) {
+        return 0;
+    }
+
+    const parsed = Number(rawIndex ?? 0);
+
+    if (!Number.isFinite(parsed)) {
+        return 0;
+    }
+
+    return Math.min(Math.max(Math.trunc(parsed), 0), itemCount - 1);
+}
+
+function voteMessage(voteState?: string, reason?: string) {
+    if (voteState === "saved") {
+        return "Vote saved.";
+    }
+
+    if (voteState === "login_required") {
+        return "You must be logged in to vote.";
+    }
+
+    if (voteState === "failed") {
+        if (reason) {
+            return `Vote failed: ${decodeURIComponent(reason)}`;
+        }
+
+        return "Vote failed. Please try again.";
+    }
+
+    return null;
+}
+
+async function resolveProfileId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+    const byUserId = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
+
+    if (!byUserId.error && byUserId.data?.id) {
+        return String(byUserId.data.id);
+    }
+
+    const byId = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
+
+    if (!byId.error && byId.data?.id) {
+        return String(byId.data.id);
+    }
+
+    return null;
+}
+
+export default async function Project1Page({ searchParams }: Project1PageProps) {
+    const params = searchParams ? await searchParams : undefined;
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    const profileId = user ? await resolveProfileId(supabase, user.id) : null;
+
+    const handleSignOut = async () => {
+        "use server";
+
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+        redirect("/");
+    };
+
+    const handleVote = async (formData: FormData) => {
+        "use server";
+
+        const captionId = formData.get("caption_id");
+        const vote = formData.get("vote");
+        const currentIndex = Number(formData.get("index") ?? 0);
+
+        if (!captionId || !vote || (vote !== "up" && vote !== "down")) {
+            redirect("/project1/app?vote=failed");
+        }
+
+        const supabase = await createClient();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+            redirect("/project1/app?vote=login_required");
+        }
+
+        const profileId = await resolveProfileId(supabase, user.id);
+
+        if (!profileId) {
+            const safeReason = encodeURIComponent("No profile found for this authenticated user.");
+            redirect(`/project1/app?vote=failed&reason=${safeReason}`);
+        }
+
+        const voteValue = vote === "up" ? 1 : -1;
+
+        const { error } = await supabase.from("caption_votes").upsert(
+            {
+                caption_id: String(captionId),
+                profile_id: profileId,
+                vote_value: voteValue,
+                created_by_user_id: profileId,
+                modified_by_user_id: profileId,
+            },
+            { onConflict: "profile_id,caption_id" },
+        );
+
+        if (error) {
+            const safeReason = encodeURIComponent(error.message);
+            redirect(`/project1/app?vote=failed&reason=${safeReason}&i=${currentIndex}`);
+        }
+
+        const nextIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
+        redirect(`/project1/app?vote=saved&i=${nextIndex}`);
+    };
+
+    const { data: captionsData, error: captionsError } = await supabase
+        .from("captions")
+        .select("id,content,image_id,is_public")
+        .eq("is_public", true)
+        .order("id", { ascending: false })
+        .limit(200);
+
+    const captions = ((captionsData ?? []) as CaptionRow[]).filter((caption) => Boolean(caption.image_id));
+
+    const imageIds = Array.from(
+        new Set(captions.map((caption) => caption.image_id).filter((id): id is string => Boolean(id))),
+    );
+
+    const imagesById = new Map<string, string>();
+
+    if (imageIds.length > 0) {
+        const { data: imagesData } = await supabase.from("images").select("id,url").in("id", imageIds);
+
+        ((imagesData ?? []) as ImageRow[]).forEach((image) => {
+            if (image.url) {
+                imagesById.set(image.id, image.url);
+            }
+        });
+    }
+
+    const memeItems = captions
+        .map((caption) => ({
+            captionId: caption.id,
+            content: caption.content ?? "(No caption text)",
+            imageUrl: caption.image_id ? imagesById.get(caption.image_id) ?? null : null,
+        }))
+        .filter((item) => Boolean(item.imageUrl));
+
+    const { data: myVotesData } = profileId
+        ? await supabase.from("caption_votes").select("caption_id").eq("profile_id", profileId)
+        : { data: null };
+
+    const votedCaptionIds = new Set(
+        ((myVotesData ?? []) as Array<{ caption_id?: string | null }>)
+            .map((row) => row.caption_id)
+            .filter((value): value is string => Boolean(value)),
+    );
+
+    const unratedMemeItems = profileId
+        ? memeItems.filter((item) => !votedCaptionIds.has(item.captionId))
+        : memeItems;
+
+    const activeIndex = parseIndex(params?.i, unratedMemeItems.length);
+    const activeItem = unratedMemeItems[activeIndex] ?? null;
+
+    const { data: votesData } = activeItem
+        ? await supabase
+            .from("caption_votes")
+            .select("caption_id,vote_value,profile_id")
+            .eq("caption_id", activeItem.captionId)
+        : { data: null };
+
+    const votes = (votesData ?? []) as VoteRow[];
+    const userVote = profileId ? votes.find((row) => row.profile_id === profileId)?.vote_value : undefined;
+    const flashMessage = voteMessage(params?.vote, params?.reason);
+
+    const previousIndex = Math.max(activeIndex - 1, 0);
+
+    return (
+        <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1</p>
+                    <h1 className="text-4xl font-semibold">Humor Project</h1>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    {user ? (
+                        <>
+                            <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-xs text-emerald-200">
+                                {user.email ?? user.id}
+                            </p>
+                            <form action={handleSignOut}>
+                                <button className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" type="submit">
+                                    Log out
+                                </button>
+                            </form>
+                        </>
+                    ) : (
+                        <LoginButton />
+                    )}
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href="/project1">
+                        How it works
+                    </Link>
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href="/">
+                        Home
+                    </Link>
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href="/assignments">
+                        Previous assignments
+                    </Link>
+                </div>
+            </div>
+
+            {params?.vote === "saved" ? (
+                <AutoDismissNotice message="✨ Vote saved! Sparkles awarded. ✨" />
+            ) : null}
+
+            {flashMessage && params?.vote !== "saved" ? (
+                <section className="rounded-2xl border border-zinc-300 bg-zinc-100 p-4 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                    {flashMessage}
+                </section>
+            ) : null}
+
+            {captionsError ? (
+                <section className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
+                    <p className="font-semibold">Unable to load captions</p>
+                    <p className="mt-2">{captionsError.message}</p>
+                </section>
+            ) : !activeItem ? (
+                <section className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+                    {profileId ? "No unrated memes left right now. Check back after more captions are posted." : "No memes found yet."}
+                </section>
+            ) : (
+                <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900" id="meme-rater">
+                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                        Meme {activeIndex + 1} of {unratedMemeItems.length}
+                    </p>
+
+                    {activeItem.imageUrl ? (
+                        <Image
+                            alt="Uploaded meme"
+                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 bg-zinc-100 object-contain dark:border-zinc-700 dark:bg-zinc-800"
+                            height={420}
+                            src={activeItem.imageUrl}
+                            unoptimized
+                            width={1200}
+                        />
+                    ) : null}
+
+                    <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{activeItem.content}</p>
+                    <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Caption ID: {activeItem.captionId}</p>
+
+                    <form action={handleVote} className="mt-5 flex flex-wrap items-center gap-2">
+                        <input name="caption_id" type="hidden" value={activeItem.captionId} />
+                        <input name="index" type="hidden" value={String(activeIndex)} />
+                        <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-2">
+                        <VoteButton
+                            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
+                                userVote === -1
+                                    ? "w-full border-rose-700 bg-rose-200 px-8 py-5 text-lg font-bold text-rose-900 dark:border-rose-400 dark:bg-rose-500/40 dark:text-rose-50"
+                                    : "w-full border-rose-700 bg-rose-100 px-8 py-5 text-lg font-bold text-rose-900 dark:border-rose-500 dark:bg-rose-500/20 dark:text-rose-100"
+                            }`}
+                            disabled={!user}
+                            label="EH I'VE SEEN BETTER"
+                            value="down"
+                        />
+                        <VoteButton
+                            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
+                                userVote === 1
+                                    ? "w-full border-emerald-700 bg-emerald-200 px-8 py-5 text-lg font-bold text-emerald-900 dark:border-emerald-400 dark:bg-emerald-500/40 dark:text-emerald-50"
+                                    : "w-full border-emerald-700 bg-emerald-100 px-8 py-5 text-lg font-bold text-emerald-900 dark:border-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-100"
+                            }`}
+                            disabled={!user}
+                            label="FUNNY!!!!"
+                            value="up"
+                        />
+                        </div>
+                        {userVote ? (
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                Your current vote: {userVote === 1 ? "FUNNY!!!!" : "EH I'VE SEEN BETTER"}
+                            </span>
+                        ) : null}
+                    </form>
+
+                    <div className="mt-6 flex items-center gap-2">
+                        <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href={`/project1/app?i=${previousIndex}`}>
+                            Previous
+                        </Link>
+                    </div>
+                </section>
+            )}
+
+            <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Step 2 (Optional)</p>
+                <h2 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Upload an image and generate captions</h2>
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                    Upload a photo, generate captions, and then vote on public captions above.
+                </p>
+
+                <div className="mt-5">
+                    <Week5UploadClient />
+                </div>
+            </section>
+        </main>
+    );
+}
