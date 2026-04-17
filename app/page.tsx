@@ -1,6 +1,5 @@
 import Link from "next/link";
 import LoginButton from "@/app/auth/login-button";
-import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
 const assignments = [
