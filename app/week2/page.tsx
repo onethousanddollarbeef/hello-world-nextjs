@@ -52,14 +52,14 @@ export default async function Week2Page() {
                 <div className="flex items-center gap-2">
                     {user ? (
                         <form action={handleSignOut}>
-                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
+                            <button className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-500" type="submit">
                                 Log out
                             </button>
                         </form>
                     ) : (
                         <LoginButton />
                     )}
-                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" href="/">
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-500" href="/">
                         Back to Home
                     </Link>
                 </div>

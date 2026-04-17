@@ -16,11 +16,8 @@ export default async function Home() {
         data: { user },
     } = await supabase.auth.getUser();
 
-    async function handleSignOut() {
-        "use server";
-
-        const supabase = await createClient();
-        await supabase.auth.signOut();
+    if (user) {
+        redirect("/project1/app");
     }
 
     return (
@@ -32,20 +29,7 @@ export default async function Home() {
                     Sign in to start voting immediately in Project 1.
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-2">
-                    {user ? (
-                        <>
-                            <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-xs text-emerald-200">
-                                {user.email ?? user.id}
-                            </p>
-                            <form action={handleSignOut}>
-                                <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
-                                    Log out
-                                </button>
-                            </form>
-                        </>
-                    ) : (
-                        <LoginButton />
-                    )}
+                    <LoginButton />
                 </div>
             </header>
 
@@ -57,7 +41,7 @@ export default async function Home() {
                 <div className="mt-4 flex flex-wrap gap-2">
                     {assignments.map((item) => (
                         <Link
-                            className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5"
+                            className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500"
                             href={item.href}
                             key={item.href}
                         >

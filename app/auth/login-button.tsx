@@ -19,7 +19,7 @@ export default function LoginButton() {
 
     return (
         <button
-            className="rounded-lg border border-pink-400 bg-pink-900/40 px-4 py-2 text-sm font-medium text-pink-50"
+            className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-pink-500"
             onClick={handleLogin}
             type="button"
         >

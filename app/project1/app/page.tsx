@@ -227,7 +227,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                                 {user.email ?? user.id}
                             </p>
                             <form action={handleSignOut}>
-                                <button className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" type="submit">
+                                <button className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" type="submit">
                                     Log out
                                 </button>
                             </form>
@@ -235,13 +235,13 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     ) : (
                         <LoginButton />
                     )}
-                    <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href="/project1">
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href="/project1">
                         How it works
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href="/">
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href="/">
                         Home
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href="/assignments">
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href="/assignments">
                         Previous assignments
                     </Link>
                 </div>
@@ -319,7 +319,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     </form>
 
                     <div className="mt-6 flex items-center gap-2">
-                        <Link className="rounded-lg border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm text-zinc-900 transition active:translate-y-0.5 dark:bg-zinc-800 dark:text-zinc-100" href={`/project1/app?i=${previousIndex}`}>
+                        <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-sm font-medium text-white transition active:translate-y-0.5 hover:bg-pink-500" href={`/project1/app?i=${previousIndex}`}>
                             Previous
                         </Link>
                     </div>
