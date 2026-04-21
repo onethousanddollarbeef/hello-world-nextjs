@@ -1,214 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
-import { redirect } from "next/navigation";
-import LoginButton from "@/app/auth/login-button";
-import { createClient } from "@/utils/supabase/server";
-import VoteSavedFlash from "@/app/project1/vote-saved-flash";
-import Week5UploadClient from "@/app/week5/upload-client";
 
-type CaptionRow = {
-    id: string;
-    content?: string | null;
-    image_id?: string | null;
-    is_public?: boolean | null;
-};
-
-type ImageRow = {
-    id: string;
-    url?: string | null;
-};
-
-type VoteRow = {
-    caption_id: string;
-    vote_value: number;
-    profile_id: string;
-};
-
-type Project1PageProps = {
-    searchParams?: Promise<{
-        i?: string;
-        vote?: string;
-        reason?: string;
-        showVotes?: string;
-    }>;
-};
-
-function parseIndex(rawIndex: string | undefined, itemCount: number) {
-    if (itemCount === 0) {
-        return 0;
-    }
-
-    const parsed = Number(rawIndex ?? 0);
-
-    if (!Number.isFinite(parsed)) {
-        return 0;
-    }
-
-    return Math.min(Math.max(Math.trunc(parsed), 0), itemCount - 1);
-}
-
-function formatScore(score: number) {
-    if (score > 0) {
-        return `+${score}`;
-    }
-
-    return String(score);
-}
-
-function isVoteVisible(flag: string | undefined) {
-    return flag !== "0";
-}
-
-function voteMessage(voteState?: string, reason?: string) {
-    if (voteState === "saved") {
-        return "Vote saved.";
-    }
-
-    if (voteState === "login_required") {
-        return "You must be logged in to vote.";
-    }
-
-    if (voteState === "failed") {
-        if (reason) {
-            return `Vote failed: ${decodeURIComponent(reason)}`;
-        }
-
-        return "Vote failed. Please try again.";
-    }
-
-    return null;
-}
-
-async function resolveProfileId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
-    const byUserId = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
-
-    if (!byUserId.error && byUserId.data?.id) {
-        return String(byUserId.data.id);
-    }
-
-    const byId = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
-
-    if (!byId.error && byId.data?.id) {
-        return String(byId.data.id);
-    }
-
-    return null;
-}
-
-export default async function Project1Page({ searchParams }: Project1PageProps) {
-    const params = searchParams ? await searchParams : undefined;
-    const supabase = await createClient();
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
-    const profileId = user ? await resolveProfileId(supabase, user.id) : null;
-    const showVotes = isVoteVisible(params?.showVotes);
-
-    const handleVote = async (formData: FormData) => {
-        "use server";
-
-        const captionId = formData.get("caption_id");
-        const vote = formData.get("vote");
-        const currentIndex = Number(formData.get("index") ?? 0);
-        const showVotesFlag = String(formData.get("showVotes") ?? "1");
-
-        if (!captionId || !vote || (vote !== "up" && vote !== "down")) {
-            redirect("/project1?vote=failed");
-        }
-
-        const supabase = await createClient();
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-            redirect("/project1?vote=login_required");
-        }
-
-        const profileId = await resolveProfileId(supabase, user.id);
-
-        if (!profileId) {
-            const safeReason = encodeURIComponent("No profile found for this authenticated user.");
-            redirect(`/project1?vote=failed&reason=${safeReason}`);
-        }
-
-        const voteValue = vote === "up" ? 1 : -1;
-        const nowUtc = new Date().toISOString();
-
-        const { error } = await supabase.from("caption_votes").upsert(
-            {
-                caption_id: String(captionId),
-                profile_id: profileId,
-                vote_value: voteValue,
-                created_datetime_utc: nowUtc,
-                modified_datetime_utc: nowUtc,
-            },
-            { onConflict: "profile_id,caption_id" },
-        );
-
-        if (error) {
-            const safeReason = encodeURIComponent(error.message);
-            redirect(`/project1?vote=failed&reason=${safeReason}&i=${currentIndex}&showVotes=${showVotesFlag}`);
-        }
-
-        const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
-        redirect(`/project1?vote=saved&i=${nextIndex}&showVotes=${showVotesFlag}`);
-    };
-
-    const { data: captionsData, error: captionsError } = await supabase
-        .from("captions")
-        .select("id,content,image_id,is_public")
-        .eq("is_public", true)
-        .order("id", { ascending: false })
-        .limit(200);
-
-    const captions = ((captionsData ?? []) as CaptionRow[]).filter((caption) => Boolean(caption.image_id));
-
-    const imageIds = Array.from(
-        new Set(captions.map((caption) => caption.image_id).filter((id): id is string => Boolean(id))),
-    );
-
-    const imagesById = new Map<string, string>();
-
-    if (imageIds.length > 0) {
-        const { data: imagesData } = await supabase.from("images").select("id,url").in("id", imageIds);
-
-        ((imagesData ?? []) as ImageRow[]).forEach((image) => {
-            if (image.url) {
-                imagesById.set(image.id, image.url);
-            }
-        });
-    }
-
-    const memeItems = captions
-        .map((caption) => ({
-            captionId: caption.id,
-            content: caption.content ?? "(No caption text)",
-            imageUrl: caption.image_id ? imagesById.get(caption.image_id) ?? null : null,
-        }))
-        .filter((item) => Boolean(item.imageUrl));
-
-    const activeIndex = parseIndex(params?.i, memeItems.length);
-    const activeItem = memeItems[activeIndex] ?? null;
-
-    const { data: votesData } = activeItem
-        ? await supabase
-            .from("caption_votes")
-            .select("caption_id,vote_value,profile_id")
-            .eq("caption_id", activeItem.captionId)
-        : { data: null };
-
-    const votes = (votesData ?? []) as VoteRow[];
-    const score = votes.reduce((sum, row) => sum + row.vote_value, 0);
-    const userVote = profileId ? votes.find((row) => row.profile_id === profileId)?.vote_value : undefined;
-    const flashMessage = voteMessage(params?.vote, params?.reason);
-
-    const previousIndex = Math.max(activeIndex - 1, 0);
-    const nextIndex = memeItems.length > 0 ? Math.min(activeIndex + 1, memeItems.length - 1) : 0;
-    const toggleVoteViewHref = `/project1?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
-
+export default function Project1IntroPage() {
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -326,19 +118,19 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                             Next
                         </Link>
                     </div>
-                </section>
-            )}
+                    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/60">
+                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Step 2</p>
+                        <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-200">Upload an image and generate fresh captions when you want more content.</p>
+                    </div>
+                </div>
 
-            <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project 1 Extension</p>
-                <h2 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Upload an image and generate captions</h2>
-                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                    This includes your Week 5 pipeline directly in Project 1 so users can upload photos, generate captions,
-                    and then vote on public captions in the meme voter above.
-                </p>
-
-                <div className="mt-5">
-                    <Week5UploadClient />
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                    <Link className="rounded-lg border border-pink-500 bg-pink-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-500 active:translate-y-0.5" href="/project1/app">
+                        Let&apos;s get started
+                    </Link>
+                    <Link className="rounded-lg border border-zinc-700 px-4 py-3 text-sm" href="/assignments">
+                        Previous assignments
+                    </Link>
                 </div>
             </section>
         </main>
