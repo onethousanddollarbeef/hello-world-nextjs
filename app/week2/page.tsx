@@ -49,20 +49,9 @@ export default async function Week2Page() {
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 2 Assignment</p>
                     <h1 className="text-4xl font-semibold">Supabase List Page</h1>
                 </div>
-                <div className="flex items-center gap-2">
-                    {user ? (
-                        <form action={handleSignOut}>
-                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
-                                Log out
-                            </button>
-                        </form>
-                    ) : (
-                        <LoginButton />
-                    )}
-                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" href="/">
-                        Back to Home
-                    </Link>
-                </div>
+                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950" href="/">
+                    Back to Home
+                </Link>
             </div>
 
             {!tableName ? (

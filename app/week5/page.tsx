@@ -26,20 +26,9 @@ export default async function Week5Page() {
                         1) Presigned URL → 2) Upload bytes → 3) Register URL → 4) Generate captions.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    {user ? (
-                        <form action={handleSignOut}>
-                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
-                                Log out
-                            </button>
-                        </form>
-                    ) : (
-                        <LoginButton />
-                    )}
-                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" href="/">
-                        Back to Home
-                    </Link>
-                </div>
+                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
+                    Back to Home
+                </Link>
             </div>
 
             <Week5UploadClient />

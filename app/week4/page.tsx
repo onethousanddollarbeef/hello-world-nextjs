@@ -208,13 +208,13 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
                     <h1 className="text-4xl font-semibold">Caption Match</h1>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">A flame in your hand sheds a light in a 9 m (30 ft) radius and deals 1d8⁠ ⁠Fire damage when thrown.</p>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Rate one caption at a time and move through the queue.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                    <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={toggleVoteViewHref}>
                         {showVotes ? "Hide scores" : "Show scores"}
                     </Link>
-                    <Link className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" href="/">
+                    <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
                     {user ? (
@@ -292,8 +292,8 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                             <button
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === 1
-                                        ? "border-emerald-700 bg-emerald-200 text-emerald-900 dark:border-emerald-400 dark:bg-emerald-500/40 dark:text-emerald-50"
-                                        : "border-emerald-700 bg-emerald-100 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-100"
+                                        ? "border-yellow-200 bg-yellow-300 text-zinc-950"
+                                        : "border-yellow-200 bg-yellow-400 text-zinc-950"
                                 }`}
                                 name="vote"
                                 type="submit"
@@ -304,8 +304,8 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                             <button
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === -1
-                                        ? "border-rose-700 bg-rose-200 text-rose-900 dark:border-rose-400 dark:bg-rose-500/40 dark:text-rose-50"
-                                        : "border-rose-700 bg-rose-100 text-rose-900 dark:border-rose-500 dark:bg-rose-500/20 dark:text-rose-100"
+                                        ? "border-yellow-200 bg-yellow-300 text-zinc-950"
+                                        : "border-yellow-200 bg-yellow-400 text-zinc-950"
                                 }`}
                                 name="vote"
                                 type="submit"
@@ -324,10 +324,10 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     )}
 
                     <div className="mt-6 flex items-center justify-between gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Previous
                         </Link>
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Next
                         </Link>
                     </div>

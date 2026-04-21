@@ -33,16 +33,14 @@ export default async function Home() {
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-2">
                     {user ? (
-                        <>
-                            <p className="rounded-lg border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-xs text-emerald-200">
-                                {user.email ?? user.id}
-                            </p>
-                            <form action={handleSignOut}>
-                                <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700" type="submit">
-                                    Log out
-                                </button>
-                            </form>
-                        </>
+                        <form action={handleSignOut}>
+                            <button
+                                className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950"
+                                type="submit"
+                            >
+                                Log out
+                            </button>
+                        </form>
                     ) : (
                         <LoginButton />
                     )}
@@ -61,8 +59,31 @@ export default async function Home() {
                             href={item.href}
                             key={item.href}
                         >
-                            {item.label}
-                        </Link>
+                            <div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -right-5 -top-8 h-36 w-36 opacity-35 blur-[0.2px]"
+                                style={{
+                                    backgroundImage: `url('${card.overlayImageUrl}')`,
+                                    backgroundRepeat: "no-repeat",
+                                    backgroundPosition: "center",
+                                    backgroundSize: "contain",
+                                    filter: "drop-shadow(0 0 10px rgba(255,200,140,0.4))",
+                                }}
+                            />
+
+                            <p className="text-xs uppercase tracking-[0.2em] text-zinc-300">{card.week}</p>
+                            <h2 className="mt-2 text-xl font-semibold">{card.title}</h2>
+                            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-amber-300">Spell Theme: {card.skill}</p>
+                            <p className="mt-2 text-sm text-zinc-200">{card.description}</p>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                <Link
+                                    className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5"
+                                    href={card.href}
+                                >
+                                    {card.cta}
+                                </Link>
+                            </div>
+                        </article>
                     ))}
                 </div>
             </section>
