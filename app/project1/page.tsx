@@ -227,14 +227,14 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     ) : (
                         <LoginButton />
                     )}
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
-                        Back to Home
+                    <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/assignments">
+                        Previous assignments
                     </Link>
                 </div>
             </div>
 
             <div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-xs uppercase tracking-[0.18em] text-zinc-300 transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={toggleVoteViewHref}>
                     {showVotes ? "Hide current score" : "Show current score"}
                 </Link>
             </div>
@@ -265,7 +265,7 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     {activeItem.imageUrl ? (
                         <Image
                             alt="Uploaded meme"
-                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-700"
+                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-200 bg-zinc-100 object-contain dark:border-zinc-700 dark:bg-zinc-800"
                             height={420}
                             src={activeItem.imageUrl}
                             unoptimized
@@ -288,8 +288,8 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         <button
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === 1
-                                    ? "border-emerald-500 bg-emerald-500/40 text-emerald-100"
-                                    : "border-emerald-600/40 bg-emerald-600/20 text-emerald-200"
+                                    ? "border-yellow-200 bg-yellow-300 text-zinc-950"
+                                    : "border-yellow-200 bg-yellow-400 text-zinc-950"
                             }`}
                             disabled={!user}
                             name="vote"
@@ -301,8 +301,8 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                         <button
                             className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                 userVote === -1
-                                    ? "border-rose-500 bg-rose-500/40 text-rose-100"
-                                    : "border-rose-600/40 bg-rose-600/20 text-rose-200"
+                                    ? "border-yellow-200 bg-yellow-300 text-zinc-950"
+                                    : "border-yellow-200 bg-yellow-400 text-zinc-950"
                             }`}
                             disabled={!user}
                             name="vote"
@@ -319,10 +319,10 @@ export default async function Project1Page({ searchParams }: Project1PageProps) 
                     </form>
 
                     <div className="mt-6 flex items-center justify-between gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={`/project1?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Previous
                         </Link>
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/project1?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={`/project1?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Next
                         </Link>
                     </div>
