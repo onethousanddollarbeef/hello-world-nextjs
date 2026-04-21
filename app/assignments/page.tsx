@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SessionButton from "@/app/auth/session-button";
 
 const assignments = [
     { label: "Week 2 - Supabase List", href: "/week2" },
@@ -10,6 +11,9 @@ const assignments = [
 export default function AssignmentsPage() {
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/assignments" />
+            </div>
             <header className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Assignments</p>
