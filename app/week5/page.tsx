@@ -1,7 +1,21 @@
 import Link from "next/link";
+import LoginButton from "@/app/auth/login-button";
 import Week5UploadClient from "@/app/week5/upload-client";
+import { createClient } from "@/utils/supabase/server";
 
-export default function Week5Page() {
+export default async function Week5Page() {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    async function handleSignOut() {
+        "use server";
+
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+    }
+
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
             <div className="flex flex-wrap items-center justify-between gap-3">
