@@ -113,7 +113,7 @@ export default async function Home() {
                     {user ? (
                         <form action={handleSignOut}>
                             <button
-                                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
+                                className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950"
                                 type="submit"
                             >
                                 Log out
@@ -152,7 +152,7 @@ export default async function Home() {
                             <p className="mt-2 text-sm text-zinc-200">{card.description}</p>
                             <div className="mt-4 flex flex-wrap gap-2">
                                 <Link
-                                    className="rounded-lg border border-zinc-200/40 bg-black/30 px-4 py-2 text-sm transition active:translate-y-0.5"
+                                    className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5"
                                     href={card.href}
                                 >
                                     {card.cta}

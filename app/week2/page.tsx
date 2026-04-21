@@ -38,7 +38,7 @@ export default async function Week2Page() {
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 2 Assignment</p>
                     <h1 className="text-4xl font-semibold">Supabase List Page</h1>
                 </div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
+                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950" href="/">
                     Back to Home
                 </Link>
             </div>
