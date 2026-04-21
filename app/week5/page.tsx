@@ -12,7 +12,7 @@ export default function Week5Page() {
                         1) Presigned URL → 2) Upload bytes → 3) Register URL → 4) Generate captions.
                     </p>
                 </div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
                     Back to Home
                 </Link>
             </div>
