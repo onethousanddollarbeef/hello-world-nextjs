@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
 type PipelineCaption = {
@@ -43,12 +43,16 @@ export default function Week5UploadClient() {
     const [captions, setCaptions] = useState<PipelineCaption[]>([]);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [imageId, setImageId] = useState<string | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const canSubmit = useMemo(() => file !== null && status !== "running", [file, status]);
     const totalSteps = 4;
     const progressPercent = Math.round((currentStep / totalSteps) * 100);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = null;
+        setStatus("idle");
         const selected = event.target.files?.[0] ?? null;
         setCaptions([]);
         setError(null);
@@ -84,6 +88,9 @@ export default function Week5UploadClient() {
         setCurrentStep(1);
         setError(null);
         setCaptions([]);
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
         const supabase = createClient();
         const {
@@ -160,14 +167,59 @@ export default function Week5UploadClient() {
         setImageId(registerPayload.imageId);
         setCurrentStep(3);
 
-        const captionsResponse = await fetch(`${apiBaseUrl}/pipeline/generate-captions`, {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify({ imageId: registerPayload.imageId }),
-        });
+            if (!uploadResponse.ok) {
+                const body = await uploadResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 2 failed: ${body || uploadResponse.statusText}`);
+                return;
+            }
+            setCurrentStep(2);
 
-        if (!captionsResponse.ok) {
-            const body = await captionsResponse.text();
+            setImageUrl(presignedPayload.cdnUrl);
+
+            const registerResponse = await fetchWithStepTimeout(`${apiBaseUrl}/pipeline/upload-image-from-url`, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({ imageUrl: presignedPayload.cdnUrl, isCommonUse: false }),
+            });
+
+            if (!registerResponse.ok) {
+                const body = await registerResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 3 failed: ${body || registerResponse.statusText}`);
+                return;
+            }
+            setCurrentStep(3);
+
+            const registerPayload = (await registerResponse.json()) as { imageId: string };
+            setImageId(registerPayload.imageId);
+
+            const captionsResponse = await fetchWithStepTimeout(
+                `${apiBaseUrl}/pipeline/generate-captions`,
+                {
+                    method: "POST",
+                    headers: authHeaders,
+                    body: JSON.stringify({ imageId: registerPayload.imageId }),
+                },
+                60000,
+            );
+
+            if (!captionsResponse.ok) {
+                const body = await captionsResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 4 failed: ${body || captionsResponse.statusText}`);
+                return;
+            }
+
+            const captionsPayload = (await captionsResponse.json()) as PipelineCaption[];
+            setCaptions(Array.isArray(captionsPayload) ? captionsPayload : []);
+            setCurrentStep(4);
+            setStatus("done");
+        } catch (caughtError) {
+            const message = caughtError instanceof Error ? caughtError.message : "Unexpected pipeline error.";
             setStatus("idle");
             setCurrentStep(0);
             setError(`Step 4 failed: ${body || captionsResponse.statusText}`);
@@ -215,7 +267,7 @@ export default function Week5UploadClient() {
                     disabled={!canSubmit}
                     type="submit"
                 >
-                    Run 4-step caption pipeline
+                    {status === "running" ? "Running..." : captions.length > 0 ? "Run pipeline again" : "Run 4-step caption pipeline"}
                 </button>
             </form>
 
