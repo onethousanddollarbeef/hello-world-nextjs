@@ -1,5 +1,5 @@
 import Link from "next/link";
-import LoginButton from "@/app/auth/login-button";
+import SessionButton from "@/app/auth/session-button";
 import Week5UploadClient from "@/app/week5/upload-client";
 import { createClient } from "@/utils/supabase/server";
 
@@ -18,6 +18,9 @@ export default async function Week5Page() {
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/week5" />
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 5 Assignment</p>
@@ -26,7 +29,7 @@ export default async function Week5Page() {
                         1) Presigned URL → 2) Upload bytes → 3) Register URL → 4) Generate captions.
                     </p>
                 </div>
-                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
+                <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-base font-bold text-white transition active:translate-y-0.5" href="/">
                     Back to Home
                 </Link>
             </div>

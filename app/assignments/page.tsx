@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SessionButton from "@/app/auth/session-button";
 
 const assignments = [
     { label: "Week 2 - Supabase List", href: "/week2" },
@@ -10,12 +11,15 @@ const assignments = [
 export default function AssignmentsPage() {
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/assignments" />
+            </div>
             <header className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Assignments</p>
                     <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100">Previous Assignment Pages</h1>
                 </div>
-                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950" href="/project1">
+                <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-base font-bold text-white" href="/project1">
                     Back to Project 1
                 </Link>
             </header>
@@ -25,7 +29,7 @@ export default function AssignmentsPage() {
                     {assignments.map((item) => (
                         <li key={item.href}>
                             <Link
-                                className="block rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-3 text-base font-bold text-zinc-950 transition hover:bg-yellow-300"
+                                className="block rounded-lg border border-white bg-pink-600 px-4 py-3 text-base font-bold text-white transition hover:bg-pink-500"
                                 href={item.href}
                             >
                                 {item.label}
