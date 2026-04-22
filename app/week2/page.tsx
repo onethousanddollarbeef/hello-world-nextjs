@@ -25,6 +25,16 @@ function pickLabel(row: SupabaseRow) {
 export default async function Week2Page() {
     const tableName = process.env.SUPABASE_TABLE;
     const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    async function handleSignOut() {
+        "use server";
+
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+    }
 
     const { data, error } = tableName
         ? await supabase.from(tableName).select("*").limit(20)
