@@ -47,7 +47,7 @@ export default function Week5UploadClient() {
 
     const canSubmit = useMemo(() => file !== null && status !== "running", [file, status]);
     const totalSteps = 4;
-    const progressPercent = Math.min(Math.max((currentStep / totalSteps) * 100, 0), 100);
+    const progressPercent = Math.round((currentStep / totalSteps) * 100);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         abortControllerRef.current?.abort();
@@ -85,42 +85,34 @@ export default function Week5UploadClient() {
         }
 
         setStatus("running");
-        setCurrentStep(0);
+        setCurrentStep(1);
         setError(null);
         setCaptions([]);
         abortControllerRef.current?.abort();
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
-        const supabase = createClient();
-        const {
-            data: { session },
-        } = await supabase.auth.getSession();
-
-        const token = session?.access_token;
-
-        if (!token) {
-            setStatus("idle");
-            setError("You must be logged in to call the caption pipeline.");
-            return;
-        }
-
-        const authHeaders = {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-        };
-
-        const fetchWithStepTimeout = async (url: string, options: RequestInit, timeoutMs = 30000) => {
-            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                return await fetch(url, { ...options, signal: controller.signal });
-            } finally {
-                clearTimeout(timeoutId);
-            }
-        };
-
         try {
-            const presignedResponse = await fetchWithStepTimeout(`${apiBaseUrl}/pipeline/generate-presigned-url`, {
+            const supabase = createClient();
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+
+            const token = session?.access_token;
+
+            if (!token) {
+                setStatus("idle");
+                setCurrentStep(0);
+                setError("You must be logged in to call the caption pipeline.");
+                return;
+            }
+
+            const authHeaders = {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            };
+
+            const presignedResponse = await fetch(`${apiBaseUrl}/pipeline/generate-presigned-url`, {
                 method: "POST",
                 headers: authHeaders,
                 body: JSON.stringify({ contentType: file.type }),
@@ -133,24 +125,19 @@ export default function Week5UploadClient() {
                 setError(`Step 1 failed: ${body || presignedResponse.statusText}`);
                 return;
             }
-            setCurrentStep(1);
 
             const presignedPayload = (await presignedResponse.json()) as {
                 presignedUrl: string;
                 cdnUrl: string;
             };
 
-            const uploadResponse = await fetchWithStepTimeout(
-                presignedPayload.presignedUrl,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": file.type,
-                    },
-                    body: file,
+            const uploadResponse = await fetch(presignedPayload.presignedUrl, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": file.type,
                 },
-                60000,
-            );
+                body: file,
+            });
 
             if (!uploadResponse.ok) {
                 const body = await uploadResponse.text();
@@ -159,11 +146,11 @@ export default function Week5UploadClient() {
                 setError(`Step 2 failed: ${body || uploadResponse.statusText}`);
                 return;
             }
-            setCurrentStep(2);
 
+            setCurrentStep(2);
             setImageUrl(presignedPayload.cdnUrl);
 
-            const registerResponse = await fetchWithStepTimeout(`${apiBaseUrl}/pipeline/upload-image-from-url`, {
+            const registerResponse = await fetch(`${apiBaseUrl}/pipeline/upload-image-from-url`, {
                 method: "POST",
                 headers: authHeaders,
                 body: JSON.stringify({ imageUrl: presignedPayload.cdnUrl, isCommonUse: false }),
@@ -176,20 +163,16 @@ export default function Week5UploadClient() {
                 setError(`Step 3 failed: ${body || registerResponse.statusText}`);
                 return;
             }
-            setCurrentStep(3);
 
             const registerPayload = (await registerResponse.json()) as { imageId: string };
             setImageId(registerPayload.imageId);
+            setCurrentStep(3);
 
-            const captionsResponse = await fetchWithStepTimeout(
-                `${apiBaseUrl}/pipeline/generate-captions`,
-                {
-                    method: "POST",
-                    headers: authHeaders,
-                    body: JSON.stringify({ imageId: registerPayload.imageId }),
-                },
-                60000,
-            );
+            const captionsResponse = await fetch(`${apiBaseUrl}/pipeline/generate-captions`, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({ imageId: registerPayload.imageId }),
+            });
 
             if (!captionsResponse.ok) {
                 const body = await captionsResponse.text();
@@ -207,14 +190,7 @@ export default function Week5UploadClient() {
             const message = caughtError instanceof Error ? caughtError.message : "Unexpected pipeline error.";
             setStatus("idle");
             setCurrentStep(0);
-            if (controller.signal.aborted) {
-                setError("Pipeline stopped. You can choose another photo and run it again.");
-                return;
-            }
-
-            setError(`Pipeline failed: ${message}`);
-        } finally {
-            abortControllerRef.current = null;
+            setError(message);
         }
     };
 
@@ -222,36 +198,34 @@ export default function Week5UploadClient() {
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <h2 className="text-lg font-semibold">Upload an image and generate captions</h2>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Status: {formatStepStatus(status)}</p>
-            <div className="mt-3">
-                <div className="mb-2 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300">
-                    <span>
-                        Step {Math.min(currentStep + (status === "running" ? 1 : 0), totalSteps)} of {totalSteps}
-                    </span>
-                    <span>{Math.round(progressPercent)}%</span>
+            <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                    <span>Step {Math.max(currentStep, 1)} of {totalSteps}</span>
+                    <span>{progressPercent}%</span>
                 </div>
-                <div className="h-3 w-full overflow-hidden rounded-full border border-pink-300 bg-zinc-200 dark:border-pink-500/40 dark:bg-zinc-800">
+                <div className="h-3 w-full rounded-full bg-zinc-200 dark:bg-zinc-800">
                     <div
-                        className="h-full bg-pink-500 transition-all duration-300"
+                        className="h-3 rounded-full bg-pink-500 transition-all duration-300"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-zinc-600 dark:text-zinc-300 md:grid-cols-4">
-                    <span className={currentStep >= 1 ? "font-semibold text-pink-700 dark:text-pink-200" : ""}>1) Presign URL</span>
-                    <span className={currentStep >= 2 ? "font-semibold text-pink-700 dark:text-pink-200" : ""}>2) Upload image</span>
-                    <span className={currentStep >= 3 ? "font-semibold text-pink-700 dark:text-pink-200" : ""}>3) Register image</span>
-                    <span className={currentStep >= 4 ? "font-semibold text-pink-700 dark:text-pink-200" : ""}>4) Generate captions</span>
-                </div>
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    {currentStep <= 1 && "1) Generate presigned URL"}
+                    {currentStep === 2 && "2) Upload image bytes"}
+                    {currentStep === 3 && "3) Register image URL"}
+                    {currentStep >= 4 && "4) Generate captions"}
+                </p>
             </div>
 
             <form className="mt-4 flex flex-col gap-3" onSubmit={handleSubmit}>
                 <input
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic"
-                    className="w-fit cursor-pointer rounded-lg border border-pink-700 bg-pink-100 px-3 py-2 text-sm text-pink-900 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-pink-700 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-pink-50 hover:bg-pink-200"
+                    className="w-full rounded-lg border border-yellow-200 bg-zinc-950 px-3 py-2 text-base text-white file:mr-4 file:rounded-lg file:border file:border-yellow-200 file:bg-yellow-400 file:px-4 file:py-2 file:font-bold file:text-zinc-950 file:transition hover:file:bg-yellow-300"
                     onChange={handleFileChange}
                     type="file"
                 />
                 <button
-                    className="w-fit rounded-lg border border-pink-700 bg-pink-100 px-4 py-2 text-sm font-medium text-pink-900 transition active:translate-y-0.5 disabled:opacity-50 dark:border-pink-300 dark:bg-pink-900/40 dark:text-pink-50"
+                    className="w-fit rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5 disabled:opacity-50"
                     disabled={!canSubmit}
                     type="submit"
                 >
