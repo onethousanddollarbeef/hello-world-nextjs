@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import LoginButton from "@/app/auth/login-button";
+import SessionButton from "@/app/auth/session-button";
 import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -204,6 +204,9 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/week4" />
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
@@ -244,7 +247,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
                     <p className="mt-2">You can browse captions, but only logged-in users can submit votes.</p>
                     <div className="mt-4">
-                        <LoginButton />
+                        <SessionButton returnTo="/week4" />
                     </div>
                 </section>
             )}
