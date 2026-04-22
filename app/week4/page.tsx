@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import LoginButton from "@/app/auth/login-button";
+import SessionButton from "@/app/auth/session-button";
 import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -194,17 +194,20 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/week4" />
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
                     <h1 className="text-4xl font-semibold">Caption Match</h1>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">A flame in your hand sheds a light in a 9 m (30 ft) radius and deals 1d8⁠ ⁠Fire damage when thrown.</p>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Rate one caption at a time and move through the queue.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-base font-bold text-white transition active:translate-y-0.5" href={toggleVoteViewHref}>
                         {showVotes ? "Hide scores" : "Show scores"}
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                    <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-base font-bold text-white transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
                 </div>
@@ -219,7 +222,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
                     <p className="mt-2">You can browse captions, but only logged-in users can submit votes.</p>
                     <div className="mt-4">
-                        <LoginButton />
+                        <SessionButton returnTo="/week4" />
                     </div>
                 </section>
             )}
@@ -267,8 +270,8 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                             <button
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === 1
-                                        ? "border-emerald-500 bg-emerald-500/40 text-emerald-100"
-                                        : "border-emerald-600/40 bg-emerald-600/20 text-emerald-200"
+                                        ? "border-white bg-pink-500 text-white"
+                                        : "border-white bg-pink-600 text-white"
                                 }`}
                                 name="vote"
                                 type="submit"
@@ -279,8 +282,8 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                             <button
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === -1
-                                        ? "border-rose-500 bg-rose-500/40 text-rose-100"
-                                        : "border-rose-600/40 bg-rose-600/20 text-rose-200"
+                                        ? "border-white bg-pink-500 text-white"
+                                        : "border-white bg-pink-600 text-white"
                                 }`}
                                 name="vote"
                                 type="submit"
@@ -299,10 +302,10 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     )}
 
                     <div className="mt-6 flex items-center justify-between gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-base font-bold text-white transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Previous
                         </Link>
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-white bg-pink-600 px-4 py-2 text-base font-bold text-white transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Next
                         </Link>
                     </div>
