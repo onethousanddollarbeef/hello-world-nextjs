@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
 type PipelineCaption = {
@@ -162,6 +162,9 @@ export default function Week5UploadClient() {
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = null;
+        setStatus("idle");
         const selected = event.target.files?.[0] ?? null;
         setCaptions([]);
         setError(null);
@@ -196,6 +199,9 @@ export default function Week5UploadClient() {
         setCurrentStep(1);
         setError(null);
         setCaptions([]);
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
         try {
             const supabase = createClient();
@@ -345,7 +351,7 @@ export default function Week5UploadClient() {
                     disabled={!canSubmit}
                     type="submit"
                 >
-                    Run 4-step caption pipeline
+                    {status === "running" ? "Running..." : captions.length > 0 ? "Run pipeline again" : "Run 4-step caption pipeline"}
                 </button>
             </form>
 
