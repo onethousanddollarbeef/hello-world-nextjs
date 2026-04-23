@@ -2,9 +2,9 @@
 
 :root {
   --background: #0b0a11;
-  --foreground: #ffe5f5;
-  --font-title: "Bookmania", "Palatino Linotype", Palatino, "Times New Roman", serif;
-  --font-body-small: "Mrs Eaves", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --foreground: #f3f0ea;
+  --font-title: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body-small: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @theme inline {
