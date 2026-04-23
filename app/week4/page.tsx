@@ -157,15 +157,14 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         }
 
         const voteValue = vote === "up" ? 1 : -1;
-        const nowUtc = new Date().toISOString();
 
         const { error } = await supabase.from("caption_votes").upsert(
             {
                 caption_id: String(captionId),
                 profile_id: profileId,
                 vote_value: voteValue,
-                created_datetime_utc: nowUtc,
-                modified_datetime_utc: nowUtc,
+                created_by_user_id: profileId,
+                modified_by_user_id: profileId,
             },
             { onConflict: "profile_id,caption_id" }
         );
@@ -175,7 +174,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
             redirect(`/week4?vote=failed&reason=${safeReason}&i=${currentIndex}&showVotes=${showVotesFlag}`);
         }
 
-        const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
+        const nextIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
         redirect(`/week4?vote=saved&i=${nextIndex}&showVotes=${showVotesFlag}`);
     };
 
@@ -184,8 +183,19 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         : { data: null, error: null };
 
     const items = (data ?? []) as SupabaseRow[];
-    const activeIndex = parseIndex(params?.i, items.length);
-    const activeCaption = items[activeIndex] ?? null;
+    const { data: myVotesData } = profileId
+        ? await supabase.from("caption_votes").select("caption_id").eq("profile_id", profileId)
+        : { data: null };
+    const votedCaptionIds = new Set(
+        ((myVotesData ?? []) as Array<{ caption_id?: string | null }>)
+            .map((row) => row.caption_id)
+            .filter((value): value is string => Boolean(value))
+    );
+    const unratedItems = profileId
+        ? items.filter((item) => item.id !== undefined && item.id !== null && !votedCaptionIds.has(String(item.id)))
+        : items;
+    const activeIndex = parseIndex(params?.i, unratedItems.length);
+    const activeCaption = unratedItems[activeIndex] ?? null;
     const activeCaptionId =
         activeCaption && activeCaption.id !== undefined && activeCaption.id !== null
             ? String(activeCaption.id)
@@ -201,7 +211,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
     const flashMessage = voteMessage(params?.vote, params?.reason);
 
     const previousIndex = Math.max(activeIndex - 1, 0);
-    const nextIndex = items.length > 0 ? Math.min(activeIndex + 1, items.length - 1) : 0;
+    const nextIndex = unratedItems.length > 0 ? Math.min(activeIndex + 1, unratedItems.length - 1) : 0;
     const toggleVoteViewHref = `/week4?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
 
     return (
@@ -222,6 +232,21 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
+                    {user ? (
+                        <form action={async () => {
+                            "use server";
+
+                            const supabase = await createClient();
+                            await supabase.auth.signOut();
+                            redirect("/");
+                        }}>
+                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" type="submit">
+                                Log out
+                            </button>
+                        </form>
+                    ) : (
+                        <LoginButton />
+                    )}
                 </div>
             </div>
 
@@ -265,12 +290,12 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                 </section>
             ) : !activeCaption ? (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                    No captions found in this table.
+                    {profileId ? "No unrated captions left right now. Check back after new captions are added." : "No captions found in this table."}
                 </section>
             ) : (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                     <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                        Caption {activeIndex + 1} of {items.length}
+                        Caption {activeIndex + 1} of {unratedItems.length}
                     </p>
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{pickLabel(activeCaption)}</p>
                     {activeCaptionId ? <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">ID: {activeCaptionId}</p> : null}
