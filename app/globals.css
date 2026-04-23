@@ -3,8 +3,8 @@
 :root {
   --background: #0b0a11;
   --foreground: #f3f0ea;
-  --font-title: "Bookmania", "Palatino Linotype", Palatino, "Times New Roman", serif;
-  --font-body-small: "Mrs Eaves", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --font-title: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body-small: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @theme inline {
@@ -33,4 +33,13 @@ h4,
 small,
 .font-small {
   font-family: var(--font-body-small);
+  font-weight: 600;
+}
+
+.text-xs {
+  font-size: 0.9rem;
+}
+
+.text-sm {
+  font-size: 1rem;
 }
