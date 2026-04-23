@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import LoginButton from "@/app/auth/login-button";
+import SessionButton from "@/app/auth/session-button";
 import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,10 @@ type VoteRow = {
     caption_id: string;
     vote_value: number;
     profile_id: string;
+};
+
+type CaptionVoteIdRow = {
+    caption_id: string;
 };
 
 type Week4PageProps = {
@@ -60,7 +65,17 @@ function voteMessage(voteState?: string, reason?: string) {
     return null;
 }
 
-async function resolveProfileId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+async function resolveProfileId(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    userId: string,
+    email: string,
+) {
+    const byEmail = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+
+    if (!byEmail.error && byEmail.data?.id) {
+        return String(byEmail.data.id);
+    }
+
     const byUserId = await supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle();
 
     if (!byUserId.error && byUserId.data?.id) {
@@ -113,7 +128,8 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         data: { user },
     } = await supabase.auth.getUser();
 
-    const profileId = user ? await resolveProfileId(supabase, user.id) : null;
+    const profileId = user?.email ? await resolveProfileId(supabase, user.id, user.email) : null;
+    const isVerifiedUser = Boolean(user?.email_confirmed_at && profileId);
     const showVotes = isVoteVisible(params?.showVotes);
 
     const handleVote = async (formData: FormData) => {
@@ -133,14 +149,14 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
             data: { user },
         } = await supabase.auth.getUser();
 
-        if (!user) {
+        if (!user || !user.email || !user.email_confirmed_at) {
             redirect("/week4?vote=login_required");
         }
 
-        const profileId = await resolveProfileId(supabase, user.id);
+        const profileId = await resolveProfileId(supabase, user.id, user.email);
 
         if (!profileId) {
-            const safeReason = encodeURIComponent("No profile found for this authenticated user.");
+            const safeReason = encodeURIComponent("Your email is not in profiles, so voting is disabled.");
             redirect(`/week4?vote=failed&reason=${safeReason}`);
         }
 
@@ -163,7 +179,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
             redirect(`/week4?vote=failed&reason=${safeReason}&i=${currentIndex}&showVotes=${showVotesFlag}`);
         }
 
-        const nextIndex = Number.isFinite(currentIndex) ? currentIndex + 1 : 0;
+        const nextIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
         redirect(`/week4?vote=saved&i=${nextIndex}&showVotes=${showVotesFlag}`);
     };
 
@@ -172,8 +188,22 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         : { data: null, error: null };
 
     const items = (data ?? []) as SupabaseRow[];
-    const activeIndex = parseIndex(params?.i, items.length);
-    const activeCaption = items[activeIndex] ?? null;
+    let votedCaptionIds = new Set<string>();
+
+    if (profileId) {
+        const { data: priorVotesData } = await supabase
+            .from("caption_votes")
+            .select("caption_id")
+            .eq("profile_id", profileId);
+
+        votedCaptionIds = new Set(((priorVotesData ?? []) as CaptionVoteIdRow[]).map((row) => String(row.caption_id)));
+    }
+
+    const unratedItems = profileId
+        ? items.filter((item) => item.id !== undefined && item.id !== null && !votedCaptionIds.has(String(item.id)))
+        : items;
+    const activeIndex = parseIndex(params?.i, unratedItems.length);
+    const activeCaption = unratedItems[activeIndex] ?? null;
     const activeCaptionId =
         activeCaption && activeCaption.id !== undefined && activeCaption.id !== null
             ? String(activeCaption.id)
@@ -189,22 +219,25 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
     const flashMessage = voteMessage(params?.vote, params?.reason);
 
     const previousIndex = Math.max(activeIndex - 1, 0);
-    const nextIndex = items.length > 0 ? Math.min(activeIndex + 1, items.length - 1) : 0;
+    const nextIndex = unratedItems.length > 0 ? Math.min(activeIndex + 1, unratedItems.length - 1) : 0;
     const toggleVoteViewHref = `/week4?i=${activeIndex}&showVotes=${showVotes ? "0" : "1"}`;
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/week4" />
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 4 Assignment</p>
                     <h1 className="text-4xl font-semibold">Caption Match</h1>
-                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">A flame in your hand sheds a light in a 9 m (30 ft) radius and deals 1d8⁠ ⁠Fire damage when thrown.</p>
+                    <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Rate one caption at a time and move through the queue.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={toggleVoteViewHref}>
+                    <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={toggleVoteViewHref}>
                         {showVotes ? "Hide scores" : "Show scores"}
                     </Link>
-                    <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href="/">
+                    <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
                 </div>
@@ -219,7 +252,7 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <p className="font-semibold text-zinc-800 dark:text-zinc-100">Sign in required to vote</p>
                     <p className="mt-2">You can browse captions, but only logged-in users can submit votes.</p>
                     <div className="mt-4">
-                        <LoginButton />
+                        <LoginButton returnTo="/week4" />
                     </div>
                 </section>
             )}
@@ -227,6 +260,12 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
             {flashMessage ? (
                 <section className="rounded-2xl border border-zinc-300 bg-zinc-100 p-4 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
                     {flashMessage}
+                </section>
+            ) : null}
+
+            {user && !isVerifiedUser ? (
+                <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+                    Your account must have a verified email and a matching row in <code>profiles.email</code> before you can vote.
                 </section>
             ) : null}
 
@@ -244,12 +283,12 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                 </section>
             ) : !activeCaption ? (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                    No captions found in this table.
+                    {profileId ? "No unrated captions left. You have voted on all available captions." : "No captions found in this table."}
                 </section>
             ) : (
                 <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                        Caption {activeIndex + 1} of {items.length}
+                        <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                        Caption {activeIndex + 1} of {unratedItems.length}
                     </p>
                     <p className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-100">{pickLabel(activeCaption)}</p>
                     {activeCaptionId ? <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">ID: {activeCaptionId}</p> : null}
@@ -260,16 +299,17 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     )}
 
                     {activeCaptionId ? (
-                        <form action={handleVote} className="mt-5 flex flex-wrap items-center gap-2">
+                        <form action={handleVote} className="mt-5 flex w-full flex-wrap items-center justify-center gap-3">
                             <input name="caption_id" type="hidden" value={activeCaptionId} />
                             <input name="index" type="hidden" value={String(activeIndex)} />
                             <input name="showVotes" type="hidden" value={showVotes ? "1" : "0"} />
                             <button
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === 1
-                                        ? "border-emerald-500 bg-emerald-500/40 text-emerald-100"
-                                        : "border-emerald-600/40 bg-emerald-600/20 text-emerald-200"
+                                        ? "border-green-300 bg-green-600 text-white"
+                                        : "border-green-300 bg-green-500 text-white"
                                 }`}
+                                disabled={!isVerifiedUser}
                                 name="vote"
                                 type="submit"
                                 value="up"
@@ -279,9 +319,10 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                             <button
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-transform duration-100 active:translate-y-0.5 active:scale-95 ${
                                     userVote === -1
-                                        ? "border-rose-500 bg-rose-500/40 text-rose-100"
-                                        : "border-rose-600/40 bg-rose-600/20 text-rose-200"
+                                        ? "border-red-300 bg-red-600 text-white"
+                                        : "border-red-300 bg-red-500 text-white"
                                 }`}
+                                disabled={!isVerifiedUser}
                                 name="vote"
                                 type="submit"
                                 value="down"
@@ -299,10 +340,10 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     )}
 
                     <div className="mt-6 flex items-center justify-between gap-2">
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={`/week4?i=${previousIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Previous
                         </Link>
-                        <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
+                        <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href={`/week4?i=${nextIndex}&showVotes=${showVotes ? "1" : "0"}`}>
                             Next
                         </Link>
                     </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SessionButton from "@/app/auth/session-button";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function ProtectedPage() {
@@ -10,6 +11,9 @@ export default async function ProtectedPage() {
     if (!user) {
         return (
             <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+                <div className="flex justify-start">
+                    <SessionButton returnTo="/protected" />
+                </div>
                 <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Protected Route</p>
                 <h1 className="text-4xl font-semibold">Gated UI</h1>
                 <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-5">
@@ -36,6 +40,9 @@ export default async function ProtectedPage() {
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/protected" />
+            </div>
             <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Protected Route</p>
             <h1 className="text-4xl font-semibold">Gated UI</h1>
             <p className="text-zinc-300">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SessionButton from "@/app/auth/session-button";
 import { createClient } from "@/utils/supabase/server";
 
 type RowValue = string | number | boolean | null;
@@ -33,12 +34,15 @@ export default async function Week2Page() {
 
     return (
         <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
+            <div className="flex justify-start">
+                <SessionButton returnTo="/week2" />
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Week 2 Assignment</p>
                     <h1 className="text-4xl font-semibold">Supabase List Page</h1>
                 </div>
-                <Link className="rounded-lg border border-zinc-700 px-4 py-2 text-sm" href="/">
+                <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950" href="/">
                     Back to Home
                 </Link>
             </div>
