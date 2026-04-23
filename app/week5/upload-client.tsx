@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 
 type PipelineCaption = {
@@ -38,12 +39,42 @@ function formatStepStatus(status: string) {
 export default function Week5UploadClient() {
     const [file, setFile] = useState<File | null>(null);
     const [status, setStatus] = useState("idle");
+    const [currentStep, setCurrentStep] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [captions, setCaptions] = useState<PipelineCaption[]>([]);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [imageId, setImageId] = useState<string | null>(null);
+    const [uploadedFileKey, setUploadedFileKey] = useState<string | null>(null);
 
     const canSubmit = useMemo(() => file !== null && status !== "running", [file, status]);
+    const totalSteps = 4;
+    const progressPercent = Math.round((currentStep / totalSteps) * 100);
+    const currentFileKey = file ? `${file.name}:${file.size}:${file.lastModified}:${file.type}` : null;
+
+    const requestCaptions = async (targetImageId: string, authHeaders: Record<string, string>) => {
+        let response = await fetch(`${apiBaseUrl}/pipeline/generate-captions`, {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({ imageId: targetImageId }),
+        });
+
+        if (response.ok) {
+            return response;
+        }
+
+        const errorBody = await response.text();
+
+        // Retry for the known humor flavor server misconfiguration case.
+        if (errorBody.includes("Humor flavor steps not found")) {
+            response = await fetch(`${apiBaseUrl}/pipeline/generate-captions`, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({ imageId: targetImageId, humorFlavorId: null }),
+            });
+        }
+
+        return { response, errorBody };
+    };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selected = event.target.files?.[0] ?? null;
@@ -51,6 +82,7 @@ export default function Week5UploadClient() {
         setError(null);
         setImageUrl(null);
         setImageId(null);
+        setCurrentStep(0);
 
         if (!selected) {
             setFile(null);
@@ -77,109 +109,164 @@ export default function Week5UploadClient() {
         }
 
         setStatus("running");
+        setCurrentStep(1);
         setError(null);
         setCaptions([]);
 
-        const supabase = createClient();
-        const {
-            data: { session },
-        } = await supabase.auth.getSession();
+        try {
+            const supabase = createClient();
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
 
-        const token = session?.access_token;
+            const token = session?.access_token;
 
-        if (!token) {
+            if (!token) {
+                setStatus("idle");
+                setCurrentStep(0);
+                setError("You must be logged in to call the caption pipeline.");
+                return;
+            }
+
+            const authHeaders = {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            };
+
+            // Fast path: if this exact file was already uploaded in this session,
+            // reuse the known imageId and only run caption generation.
+            if (currentFileKey && uploadedFileKey === currentFileKey && imageId) {
+                setCurrentStep(4);
+                const captionRequest = await requestCaptions(imageId, authHeaders);
+                const captionsResponse = "response" in captionRequest ? captionRequest.response : captionRequest;
+
+                if (!captionsResponse.ok) {
+                    const body = "errorBody" in captionRequest ? captionRequest.errorBody : await captionsResponse.text();
+                    setStatus("idle");
+                    setCurrentStep(0);
+                    setError(`Step 4 failed: ${body || captionsResponse.statusText}`);
+                    return;
+                }
+
+                const captionsPayload = (await captionsResponse.json()) as PipelineCaption[];
+                setCaptions(Array.isArray(captionsPayload) ? captionsPayload : []);
+                setCurrentStep(4);
+                setStatus("done");
+                return;
+            }
+
+            const presignedResponse = await fetch(`${apiBaseUrl}/pipeline/generate-presigned-url`, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({ contentType: file.type }),
+            });
+
+            if (!presignedResponse.ok) {
+                const body = await presignedResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 1 failed: ${body || presignedResponse.statusText}`);
+                return;
+            }
+
+            const presignedPayload = (await presignedResponse.json()) as {
+                presignedUrl: string;
+                cdnUrl: string;
+            };
+
+            const uploadResponse = await fetch(presignedPayload.presignedUrl, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": file.type,
+                },
+                body: file,
+            });
+
+            if (!uploadResponse.ok) {
+                const body = await uploadResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 2 failed: ${body || uploadResponse.statusText}`);
+                return;
+            }
+
+            setCurrentStep(2);
+            setImageUrl(presignedPayload.cdnUrl);
+
+            const registerResponse = await fetch(`${apiBaseUrl}/pipeline/upload-image-from-url`, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({ imageUrl: presignedPayload.cdnUrl, isCommonUse: false }),
+            });
+
+            if (!registerResponse.ok) {
+                const body = await registerResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 3 failed: ${body || registerResponse.statusText}`);
+                return;
+            }
+
+            const registerPayload = (await registerResponse.json()) as { imageId: string };
+            setImageId(registerPayload.imageId);
+            setUploadedFileKey(currentFileKey);
+            setCurrentStep(3);
+
+            const captionRequest = await requestCaptions(registerPayload.imageId, authHeaders);
+            const captionsResponse = "response" in captionRequest ? captionRequest.response : captionRequest;
+
+            if (!captionsResponse.ok) {
+                const body = "errorBody" in captionRequest ? captionRequest.errorBody : await captionsResponse.text();
+                setStatus("idle");
+                setCurrentStep(0);
+                setError(`Step 4 failed: ${body || captionsResponse.statusText}`);
+                return;
+            }
+
+            const captionsPayload = (await captionsResponse.json()) as PipelineCaption[];
+            setCaptions(Array.isArray(captionsPayload) ? captionsPayload : []);
+            setCurrentStep(4);
+            setStatus("done");
+        } catch (caughtError) {
+            const message = caughtError instanceof Error ? caughtError.message : "Unexpected pipeline error.";
             setStatus("idle");
-            setError("You must be logged in to call the caption pipeline.");
-            return;
+            setCurrentStep(0);
+            setError(message);
         }
-
-        const authHeaders = {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-        };
-
-        const presignedResponse = await fetch(`${apiBaseUrl}/pipeline/generate-presigned-url`, {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify({ contentType: file.type }),
-        });
-
-        if (!presignedResponse.ok) {
-            const body = await presignedResponse.text();
-            setStatus("idle");
-            setError(`Step 1 failed: ${body || presignedResponse.statusText}`);
-            return;
-        }
-
-        const presignedPayload = (await presignedResponse.json()) as {
-            presignedUrl: string;
-            cdnUrl: string;
-        };
-
-        const uploadResponse = await fetch(presignedPayload.presignedUrl, {
-            method: "PUT",
-            headers: {
-                "Content-Type": file.type,
-            },
-            body: file,
-        });
-
-        if (!uploadResponse.ok) {
-            const body = await uploadResponse.text();
-            setStatus("idle");
-            setError(`Step 2 failed: ${body || uploadResponse.statusText}`);
-            return;
-        }
-
-        setImageUrl(presignedPayload.cdnUrl);
-
-        const registerResponse = await fetch(`${apiBaseUrl}/pipeline/upload-image-from-url`, {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify({ imageUrl: presignedPayload.cdnUrl, isCommonUse: false }),
-        });
-
-        if (!registerResponse.ok) {
-            const body = await registerResponse.text();
-            setStatus("idle");
-            setError(`Step 3 failed: ${body || registerResponse.statusText}`);
-            return;
-        }
-
-        const registerPayload = (await registerResponse.json()) as { imageId: string };
-        setImageId(registerPayload.imageId);
-
-        const captionsResponse = await fetch(`${apiBaseUrl}/pipeline/generate-captions`, {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify({ imageId: registerPayload.imageId }),
-        });
-
-        if (!captionsResponse.ok) {
-            const body = await captionsResponse.text();
-            setStatus("idle");
-            setError(`Step 4 failed: ${body || captionsResponse.statusText}`);
-            return;
-        }
-
-        const captionsPayload = (await captionsResponse.json()) as PipelineCaption[];
-        setCaptions(Array.isArray(captionsPayload) ? captionsPayload : []);
-        setStatus("done");
     };
 
     return (
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <h2 className="text-lg font-semibold">Upload an image and generate captions</h2>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Status: {formatStepStatus(status)}</p>
+            <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                    <span>Step {Math.max(currentStep, 1)} of {totalSteps}</span>
+                    <span>{progressPercent}%</span>
+                </div>
+                <div className="h-3 w-full rounded-full bg-zinc-200 dark:bg-zinc-800">
+                    <div
+                        className="h-3 rounded-full bg-pink-500 transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                    />
+                </div>
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    {currentStep <= 1 && "1) Generate presigned URL"}
+                    {currentStep === 2 && "2) Upload image bytes"}
+                    {currentStep === 3 && "3) Register image URL"}
+                    {currentStep >= 4 && "4) Generate captions"}
+                </p>
+            </div>
 
             <form className="mt-4 flex flex-col gap-3" onSubmit={handleSubmit}>
                 <input
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic"
+                    className="w-full rounded-lg border border-yellow-200 bg-zinc-950 px-3 py-2 text-base text-white file:mr-4 file:rounded-lg file:border file:border-yellow-200 file:bg-yellow-400 file:px-4 file:py-2 file:font-bold file:text-zinc-950 file:transition hover:file:bg-yellow-300"
                     onChange={handleFileChange}
                     type="file"
                 />
                 <button
-                    className="w-fit rounded-lg border border-zinc-700 px-4 py-2 text-sm transition active:translate-y-0.5 disabled:opacity-50"
+                    className="w-fit rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5 disabled:opacity-50"
                     disabled={!canSubmit}
                     type="submit"
                 >
@@ -194,7 +281,21 @@ export default function Week5UploadClient() {
             ) : null}
 
             {imageUrl ? (
-                <p className="mt-4 break-all text-xs text-zinc-500 dark:text-zinc-400">Uploaded image URL: {imageUrl}</p>
+                <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+                    <div className="mb-3 text-center">
+                        <p className="text-3xl">🎉</p>
+                        <h3 className="text-3xl font-bold text-zinc-900">Your captions are ready!</h3>
+                        <p className="text-sm text-zinc-500">The AI has spoken. Judge accordingly.</p>
+                    </div>
+                    <Image
+                        alt="Uploaded meme preview"
+                        className="mx-auto max-h-[360px] rounded-lg border border-zinc-200 object-contain"
+                        height={360}
+                        src={imageUrl}
+                        unoptimized
+                        width={360}
+                    />
+                </div>
             ) : null}
 
             {imageId ? (
@@ -202,15 +303,20 @@ export default function Week5UploadClient() {
             ) : null}
 
             {captions.length > 0 ? (
-                <ul className="mt-5 space-y-2">
+                <ul className="mt-5 space-y-3">
                     {captions.map((caption, index) => (
                         <li
-                            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-black"
+                            className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm text-zinc-900 shadow-sm"
                             key={String(caption.id ?? index)}
                         >
-                            {typeof caption.content === "string" && caption.content.trim().length > 0
-                                ? caption.content
-                                : JSON.stringify(caption)}
+                            <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+                                😂 Caption {index + 1}
+                            </p>
+                            <p>
+                                {typeof caption.content === "string" && caption.content.trim().length > 0
+                                    ? caption.content
+                                    : "No caption text returned."}
+                            </p>
                         </li>
                     ))}
                 </ul>
