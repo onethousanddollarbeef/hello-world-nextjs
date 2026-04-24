@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import SessionButton from "@/app/auth/session-button";
 import { createClient } from "@/utils/supabase/server";
@@ -278,6 +279,17 @@ export default async function Project1AppPageContent({ searchParams }: Project1A
                     <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                         Meme {activeIndex + 1} of {memeItems.length}
                     </p>
+
+                    {activeItem.imageUrl ? (
+                        <Image
+                            alt="Caption source image"
+                            className="mt-4 max-h-[420px] w-full rounded-xl border border-zinc-700 bg-zinc-950 object-contain"
+                            height={420}
+                            src={activeItem.imageUrl}
+                            unoptimized
+                            width={1200}
+                        />
+                    ) : null}
 
                     <div className="mt-4 rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-4">
                         <p className="text-xs text-cyan-500">&quot;</p>
