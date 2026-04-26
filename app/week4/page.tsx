@@ -161,15 +161,14 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
         }
 
         const voteValue = vote === "up" ? 1 : -1;
-        const nowUtc = new Date().toISOString();
 
         const { error } = await supabase.from("caption_votes").upsert(
             {
                 caption_id: String(captionId),
                 profile_id: profileId,
                 vote_value: voteValue,
-                created_datetime_utc: nowUtc,
-                modified_datetime_utc: nowUtc,
+                created_by_user_id: profileId,
+                modified_by_user_id: profileId,
             },
             { onConflict: "profile_id,caption_id" }
         );
@@ -240,6 +239,21 @@ export default async function Week4Page({ searchParams }: Week4PageProps) {
                     <Link className="rounded-lg border border-yellow-200 bg-yellow-400 px-4 py-2 text-base font-bold text-zinc-950 transition active:translate-y-0.5" href="/">
                         Back to Home
                     </Link>
+                    {user ? (
+                        <form action={async () => {
+                            "use server";
+
+                            const supabase = await createClient();
+                            await supabase.auth.signOut();
+                            redirect("/");
+                        }}>
+                            <button className="rounded-lg border border-pink-400 bg-white px-4 py-2 text-sm font-medium text-pink-700 transition active:translate-y-0.5" type="submit">
+                                Log out
+                            </button>
+                        </form>
+                    ) : (
+                        <LoginButton />
+                    )}
                 </div>
             </div>
 
