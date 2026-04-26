@@ -2,7 +2,13 @@
 
 import { createClient } from "@/utils/supabase/client";
 
-export default function LoginButton() {
+type LoginButtonProps = {
+    returnTo?: string;
+};
+
+export default function LoginButton({ returnTo: _returnTo }: LoginButtonProps) {
+    void _returnTo;
+
     const handleLogin = async () => {
         const supabase = createClient();
 
