@@ -202,6 +202,9 @@ export default function Week5UploadClient() {
         setCurrentStep(1);
         setError(null);
         setCaptions([]);
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
         try {
             const abortController = new AbortController();
@@ -363,7 +366,7 @@ export default function Week5UploadClient() {
                     disabled={!canSubmit}
                     type="submit"
                 >
-                    Run 4-step caption pipeline
+                    {status === "running" ? "Running..." : captions.length > 0 ? "Run pipeline again" : "Run 4-step caption pipeline"}
                 </button>
             </form>
 
