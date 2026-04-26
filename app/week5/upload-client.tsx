@@ -329,7 +329,10 @@ export default function Week5UploadClient() {
     };
 
     return (
-        <section className="rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-sm">
+        <section
+            className="rounded-2xl border p-6 shadow-sm"
+            style={{ backgroundColor: "#111827", borderColor: "#374151", color: "#f9fafb" }}
+        >
             <h2 className="text-lg font-semibold text-zinc-100">Upload an image and generate captions</h2>
             <p className="mt-2 text-sm text-zinc-400">Status: {formatStepStatus(status)}</p>
             <div className="mt-4">
@@ -337,11 +340,8 @@ export default function Week5UploadClient() {
                     <span>Step {Math.max(currentStep, 1)} of {totalSteps}</span>
                     <span>{progressPercent}%</span>
                 </div>
-                <div className="h-3 w-full rounded-full bg-zinc-800">
-                    <div
-                        className="h-3 rounded-full bg-pink-500 transition-all duration-300"
-                        style={{ width: `${progressPercent}%` }}
-                    />
+                <div className="h-3 w-full rounded-full" style={{ backgroundColor: "#1f2937" }}>
+                    <div className="h-3 rounded-full bg-pink-500 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <p className="mt-2 text-xs text-zinc-400">
                     {currentStep <= 1 && "1) Generate presigned URL"}
@@ -368,13 +368,13 @@ export default function Week5UploadClient() {
             </form>
 
             {error ? (
-                <p className="mt-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
+                <p className="mt-4 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
                     {error}
                 </p>
             ) : null}
 
             {captions.length > 0 && status === "done" ? (
-                <div className="mt-6 rounded-2xl border border-zinc-700 bg-zinc-800 p-4 shadow-sm">
+                <div className="mt-6 rounded-2xl border border-zinc-700 bg-zinc-800 p-4 shadow-sm" style={{ color: "#f9fafb" }}>
                     <div className="mb-3 text-center">
                         <p className="text-3xl">🎉</p>
                         <h3 className="text-3xl font-bold text-zinc-100">Your captions are ready!</h3>
@@ -386,7 +386,8 @@ export default function Week5UploadClient() {
                 <ul className="mt-5 space-y-3">
                     {captions.map((caption, index) => (
                         <li
-                            className="rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-4 text-sm text-zinc-100 shadow-sm"
+                            className="rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-4 text-sm shadow-sm"
+                            style={{ color: "#f9fafb" }}
                             key={String(caption.id ?? index)}
                         >
                             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
