@@ -1,10 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0a11;
-  --foreground: #ffe5f5;
-  --font-title: "Bookmania", "Palatino Linotype", Palatino, "Times New Roman", serif;
-  --font-body-small: "Mrs Eaves", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --background: #f8fafc;
+  --foreground: #0b0a11;
+  --font-title: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body-small: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0a11;
+    --foreground: #f3f0ea;
+  }
 }
 
 @theme inline {
